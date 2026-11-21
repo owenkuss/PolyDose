@@ -2,30 +2,23 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { normalizeReminderTimes } from "@/lib/dosebridge-utils";
 import type { LanguageCode } from "@/lib/i18n";
+import {
+  getDemoPatient,
+  getPatientByPhone,
+  savePatientLanguage,
+  savePatientProfile,
+} from "@/lib/patients.functions";
 
 export type PatientRow = Tables<"patients">;
 export type MedicationRow = Tables<"medications">;
 export type ReminderLogRow = Tables<"reminder_logs">;
 
 export async function loadPatientByPhone(phoneNumber: string): Promise<PatientRow | null> {
-  const { data, error } = await supabase
-    .from("patients")
-    .select("*")
-    .eq("phone_number", phoneNumber.trim())
-    .maybeSingle();
-  if (error) throw error;
-  return data;
+  return getPatientByPhone({ data: { phoneNumber: phoneNumber.trim() } });
 }
 
 export async function loadFirstPatient(): Promise<PatientRow | null> {
-  const { data, error } = await supabase
-    .from("patients")
-    .select("*")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data;
+  return getDemoPatient();
 }
 
 export async function upsertPatientProfile(input: {
@@ -33,34 +26,20 @@ export async function upsertPatientProfile(input: {
   language: LanguageCode;
   timezone: string;
 }): Promise<PatientRow> {
-  const { data, error } = await supabase
-    .from("patients")
-    .upsert(
-      {
-        phone_number: input.phoneNumber.trim(),
-        language: input.language,
-        timezone: input.timezone,
-      },
-      { onConflict: "phone_number" },
-    )
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data;
+  return savePatientProfile({
+    data: {
+      phoneNumber: input.phoneNumber.trim(),
+      language: input.language,
+      timezone: input.timezone,
+    },
+  });
 }
 
 export async function updatePatientLanguage(
   patientId: string,
   language: LanguageCode,
 ): Promise<PatientRow> {
-  const { data, error } = await supabase
-    .from("patients")
-    .update({ language })
-    .eq("id", patientId)
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data;
+  return savePatientLanguage({ data: { patientId, language } });
 }
 
 export async function fetchMedications(patientId: string): Promise<MedicationRow[]> {
