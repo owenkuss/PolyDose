@@ -82,14 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "DoseBridge — Multilingual Medication Reminders" },
+      { title: "PillPing — Multilingual Medication Reminders" },
       {
         name: "description",
         content:
           "Accessible multilingual SMS medication reminder dashboard for patients and caregivers.",
       },
-      { name: "author", content: "DoseBridge" },
-      { property: "og:title", content: "DoseBridge — Multilingual Medication Reminders" },
+      { name: "author", content: "PillPing" },
+      { property: "og:title", content: "PillPing — Multilingual Medication Reminders" },
       {
         property: "og:description",
         content:

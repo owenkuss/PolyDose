@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, Clock, Globe, Phone, Plus, RotateCcw } from "lucide-react";
+import { Check, Clock, Globe, Phone, Pill, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { AddMedicationDialog } from "@/components/dosebridge/AddMedicationDialog";
 import { FilterPopover, type StatusFilter } from "@/components/dosebridge/FilterPopover";
@@ -54,13 +54,13 @@ const PHONE_STORAGE_KEY = "dosebridge_phone";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "DoseBridge — Multilingual Medication Reminders" },
+      { title: "PillPing — Multilingual Medication Reminders" },
       {
         name: "description",
         content:
           "Set up simple, translated SMS medication reminders in the top 10 U.S. languages for patients and caregivers.",
       },
-      { property: "og:title", content: "DoseBridge — Multilingual Medication Reminders" },
+      { property: "og:title", content: "PillPing — Multilingual Medication Reminders" },
       {
         property: "og:description",
         content:
@@ -402,7 +402,21 @@ function DoseBridgePage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-background">
-        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-2.5 px-4 py-3.5 sm:grid-cols-3 sm:gap-3 sm:px-6">
+        <div className="mx-auto flex max-w-4xl items-center gap-2.5 px-4 pb-1 pt-3.5 sm:px-6">
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+          >
+            <Pill className="h-4 w-4" />
+          </span>
+          <span className="font-display text-xl font-bold leading-none tracking-tight text-foreground">
+            PillPing
+          </span>
+          <span className="hidden truncate text-xs font-medium text-muted-foreground sm:inline">
+            · {t.tagline}
+          </span>
+        </div>
+        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-2.5 px-4 pb-3.5 pt-2 sm:grid-cols-3 sm:gap-3 sm:px-6">
           <div className="flex items-center">
             <Select
               value={language}
