@@ -54,13 +54,13 @@ const PHONE_STORAGE_KEY = "dosebridge_phone";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PillPing — Multilingual Medication Reminders" },
+      { title: "PolyDose — Multilingual Medication Reminders" },
       {
         name: "description",
         content:
           "Set up simple, translated SMS medication reminders in the top 10 U.S. languages for patients and caregivers.",
       },
-      { property: "og:title", content: "PillPing — Multilingual Medication Reminders" },
+      { property: "og:title", content: "PolyDose — Multilingual Medication Reminders" },
       {
         property: "og:description",
         content:
@@ -410,7 +410,7 @@ function DoseBridgePage() {
             <Pill className="h-4 w-4" />
           </span>
           <span className="font-display text-xl font-bold leading-none tracking-tight text-foreground">
-            PillPing
+            PolyDose
           </span>
           <span className="hidden truncate text-xs font-medium text-muted-foreground sm:inline">
             · {t.tagline}
