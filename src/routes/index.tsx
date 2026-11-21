@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, Clock, Globe, Phone, Plus, X } from "lucide-react";
+import { Check, Clock, Globe, Phone, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { AddMedicationDialog } from "@/components/dosebridge/AddMedicationDialog";
 import { FilterPopover, type StatusFilter } from "@/components/dosebridge/FilterPopover";
@@ -504,29 +504,33 @@ function DoseBridgePage() {
 
           <div className="flex items-center gap-2">
             {isFiltered && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedDay(null);
-                  setStatusFilter("all");
-                }}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-primary/30 bg-accent px-3 text-xs font-bold text-accent-foreground hover:bg-accent/80"
-              >
-                <span>
-                  {[
-                    selectedDay !== null ? t.daysShort[selectedDay] : null,
-                    statusFilter === "active"
-                      ? t.activeBadge
-                      : statusFilter === "paused"
-                        ? t.pausedBadge
-                        : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </span>
-                <X className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
+              <span className="inline-flex h-9 items-center rounded-full border border-primary/30 bg-accent px-3 text-xs font-bold text-accent-foreground">
+                {[
+                  selectedDay !== null ? t.daysShort[selectedDay] : null,
+                  statusFilter === "active"
+                    ? t.activeBadge
+                    : statusFilter === "paused"
+                      ? t.pausedBadge
+                      : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
             )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!isFiltered}
+              onClick={() => {
+                setSelectedDay(null);
+                setStatusFilter("all");
+              }}
+              className="h-9 gap-1.5 rounded-xl border-border bg-card px-2.5 text-xs font-semibold text-foreground shadow-xs hover:border-primary hover:bg-accent disabled:opacity-45"
+            >
+              <RotateCcw className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+              <span>{t.filterReset}</span>
+            </Button>
             <FilterPopover
               t={t}
               selectedDay={selectedDay}
