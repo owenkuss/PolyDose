@@ -217,7 +217,7 @@ function DoseBridgePage() {
       toast.success(t.profileSavedToast);
     } catch (err) {
       console.error("Profile save failed:", err);
-      toast.error(t.invalidPhoneError);
+      toast.error(err instanceof Error && err.message ? err.message : t.invalidPhoneError);
     } finally {
       setIsSavingProfile(false);
     }
@@ -262,7 +262,7 @@ function DoseBridgePage() {
       return true;
     } catch (err) {
       console.error("Add medication failed:", err);
-      toast.error(t.medValidationError);
+      toast.error(err instanceof Error && err.message ? err.message : t.medValidationError);
       return false;
     } finally {
       setIsAddingMed(false);
@@ -292,7 +292,7 @@ function DoseBridgePage() {
       return true;
     } catch (err) {
       console.error("Update medication failed:", err);
-      toast.error(t.medValidationError);
+      toast.error(err instanceof Error && err.message ? err.message : t.medValidationError);
       return false;
     } finally {
       setIsAddingMed(false);
