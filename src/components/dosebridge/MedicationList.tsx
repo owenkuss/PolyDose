@@ -48,6 +48,26 @@ export function MedicationList({
             {medications.map((med) => {
               const takenToday = isTakenToday(med.last_confirmed_at, timezone);
               const times = getMedicationTimes(med);
+              const detailsLine = (
+                <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5 sm:flex-nowrap">
+                  <h3 className="shrink-0 text-sm font-bold text-foreground">{med.name}</h3>
+                  <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                    {med.dosage}
+                  </span>
+                  {med.instructions && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="min-w-0 flex-1 cursor-default truncate text-xs text-muted-foreground">
+                          · {med.instructions}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-xs">
+                        {med.instructions}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              );
               return (
                 <div
                   key={med.id}
@@ -61,45 +81,11 @@ export function MedicationList({
                         <span className="shrink-0 rounded-md bg-background px-2.5 py-1 text-xs font-bold text-foreground tabular-nums ring-1 ring-border">
                           {formatTimeCompact12h(times[0] ?? med.reminder_time)}
                         </span>
-                        <div className="flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden">
-                          <h3 className="truncate text-sm font-bold text-foreground">{med.name}</h3>
-                          <span className="shrink-0 truncate text-xs font-medium text-muted-foreground">
-                            {med.dosage}
-                          </span>
-                          {med.instructions && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="hidden min-w-0 truncate text-xs text-muted-foreground md:inline">
-                                  · {med.instructions}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs text-xs">
-                                {med.instructions}
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
+                        {detailsLine}
                       </>
                     ) : (
                       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                        <div className="flex min-w-0 items-baseline gap-2 overflow-hidden">
-                          <h3 className="truncate text-sm font-bold text-foreground">{med.name}</h3>
-                          <span className="shrink-0 truncate text-xs font-medium text-muted-foreground">
-                            {med.dosage}
-                          </span>
-                          {med.instructions && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="hidden min-w-0 truncate text-xs text-muted-foreground md:inline">
-                                  · {med.instructions}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-xs text-xs">
-                                {med.instructions}
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
+                        {detailsLine}
                         <div className="flex flex-wrap items-center gap-1">
                           {times.map((time) => (
                             <span
