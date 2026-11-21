@@ -9,6 +9,12 @@ import {
   isTakenToday,
   isValidPhoneNumber,
 } from "@/lib/dosebridge-utils";
+import {
+  filterLocalMedications,
+  LOCAL_MEDICATIONS,
+  mergeMedicationSuggestions,
+  parseRxTermsResponse,
+} from "@/lib/medication-search";
 
 describe("DoseBridge i18n and SMS rules", () => {
   it("supports all 6 requested languages with 7 day names", () => {
@@ -98,5 +104,30 @@ describe("DoseBridge i18n and SMS rules", () => {
     const now = new Date("2026-11-21T15:00:00Z");
     expect(isTakenToday("2026-11-21T13:30:00Z", "America/New_York", now)).toBe(true);
     expect(isTakenToday("2026-11-20T13:30:00Z", "America/New_York", now)).toBe(false);
+  });
+
+  it("provides 60 local fallback medications and parses/merges NIH RxTerms responses", () => {
+    expect(LOCAL_MEDICATIONS.length).toBeGreaterThanOrEqual(60);
+    const local = filterLocalMedications("metf");
+    expect(local[0]?.name).toBe("Metformin");
+
+    const parsed = parseRxTermsResponse([
+      2,
+      ["metFORMIN (Oral Pill)", "metFORMIN XR (Oral Pill)"],
+      {
+        DISPLAY_NAME: ["metFORMIN (Oral Pill)", "metFORMIN XR (Oral Pill)"],
+        STRENGTHS_AND_FORMS: [["  500 mg Tab", "  850 mg Tab"], ["  500 mg XR Tab"]],
+      },
+    ]);
+    expect(parsed[0]).toEqual({
+      name: "Metformin",
+      form: "Oral Pill",
+      strengths: ["500 mg Tab", "850 mg Tab"],
+      source: "rxterms",
+    });
+    expect(parsed[1]?.name).toBe("Metformin XR");
+
+    const merged = mergeMedicationSuggestions(local, parsed, 8);
+    expect(merged.filter((m) => m.name === "Metformin")).toHaveLength(1);
   });
 });

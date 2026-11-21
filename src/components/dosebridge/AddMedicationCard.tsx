@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { MedicationAutocomplete } from "@/components/dosebridge/MedicationAutocomplete";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { COMMON_MEDICATIONS } from "@/lib/dosebridge-utils";
 import type { TranslationDict } from "@/lib/i18n";
+import type { MedicationSuggestion } from "@/lib/medication-search";
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
@@ -24,6 +25,7 @@ interface AddMedicationCardProps {
 export function AddMedicationCard({ t, isSubmitting, onAdd }: AddMedicationCardProps) {
   const [name, setName] = useState("");
   const [dosage, setDosage] = useState("");
+  const [suggestedStrengths, setSuggestedStrengths] = useState<string[]>([]);
   const [instructions, setInstructions] = useState("");
   const [days, setDays] = useState<number[]>(ALL_DAYS);
   const [reminderTime, setReminderTime] = useState("08:00");
@@ -43,10 +45,9 @@ export function AddMedicationCard({ t, isSubmitting, onAdd }: AddMedicationCardP
     setError(null);
   }
 
-  function handleQuickSelect(preset: (typeof COMMON_MEDICATIONS)[number]) {
-    setName(preset.name);
-    if (!dosage.trim()) setDosage(preset.dosage);
-    if (!instructions.trim()) setInstructions(preset.instructions);
+  function handleSelectMedication(suggestion: MedicationSuggestion) {
+    setName(suggestion.name);
+    setSuggestedStrengths(dosage.trim() ? [] : suggestion.strengths.slice(0, 4));
     setError(null);
   }
 
@@ -67,6 +68,7 @@ export function AddMedicationCard({ t, isSubmitting, onAdd }: AddMedicationCardP
     if (ok) {
       setName("");
       setDosage("");
+      setSuggestedStrengths([]);
       setInstructions("");
       setDays(ALL_DAYS);
       setReminderTime("08:00");
@@ -89,31 +91,22 @@ export function AddMedicationCard({ t, isSubmitting, onAdd }: AddMedicationCardP
             <Label htmlFor="med-name" className="text-sm font-bold">
               {t.medNameLabel}
             </Label>
-            <Input
+            <MedicationAutocomplete
               id="med-name"
               value={name}
-              onChange={(e) => {
-                setName(e.target.value);
+              placeholder={t.medNamePlaceholder}
+              onChange={(val) => {
+                setName(val);
+                setSuggestedStrengths([]);
                 setError(null);
               }}
-              placeholder={t.medNamePlaceholder}
-              className="h-12 bg-background text-base"
+              onSelect={handleSelectMedication}
+              onClear={() => {
+                setName("");
+                setSuggestedStrengths([]);
+                setError(null);
+              }}
             />
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <span className="text-xs font-medium text-muted-foreground">
-                {t.quickSelectLabel}
-              </span>
-              {COMMON_MEDICATIONS.map((preset) => (
-                <button
-                  key={preset.name}
-                  type="button"
-                  onClick={() => handleQuickSelect(preset)}
-                  className="min-h-9 rounded-full border border-border bg-background px-3.5 py-1 text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-accent hover:text-accent-foreground"
-                >
-                  {preset.name}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -126,11 +119,30 @@ export function AddMedicationCard({ t, isSubmitting, onAdd }: AddMedicationCardP
                 value={dosage}
                 onChange={(e) => {
                   setDosage(e.target.value);
+                  if (e.target.value.trim()) setSuggestedStrengths([]);
                   setError(null);
                 }}
                 placeholder={t.dosagePlaceholder}
                 className="h-12 bg-background text-base"
               />
+              {!dosage.trim() && suggestedStrengths.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {suggestedStrengths.map((strength) => (
+                    <button
+                      key={strength}
+                      type="button"
+                      onClick={() => {
+                        setDosage(strength);
+                        setSuggestedStrengths([]);
+                        setError(null);
+                      }}
+                      className="rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:bg-accent hover:text-accent-foreground"
+                    >
+                      {strength}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="med-instructions" className="text-sm font-bold">
