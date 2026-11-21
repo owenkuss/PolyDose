@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSmsReminderText, LANGUAGES, TRANSLATIONS } from "@/lib/i18n";
+import { buildSmsReminderText, isRtlLanguage, LANGUAGES, TRANSLATIONS } from "@/lib/i18n";
 import {
   countActiveMedicationsByDay,
   formatTime12h,
@@ -21,13 +21,33 @@ import {
 } from "@/lib/medication-search";
 
 describe("DoseBridge i18n and SMS rules", () => {
-  it("supports all 6 requested languages with 7 day names", () => {
-    expect(LANGUAGES.map((l) => l.code)).toEqual(["en", "es", "zh", "fr", "vi", "ht"]);
+  it("supports the top 10 U.S. languages plus Haitian Creole with 7 day names", () => {
+    expect(LANGUAGES.map((l) => l.code)).toEqual([
+      "en",
+      "es",
+      "zh",
+      "tl",
+      "vi",
+      "ar",
+      "fr",
+      "ko",
+      "ru",
+      "hi",
+      "ht",
+    ]);
     for (const lang of LANGUAGES) {
       const dict = TRANSLATIONS[lang.code];
       expect(dict.daysShort).toHaveLength(7);
       expect(dict.addReminderBtn.length).toBeGreaterThan(0);
       expect(dict.autoSendNote.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("marks only Arabic as right-to-left", () => {
+    expect(isRtlLanguage("ar")).toBe(true);
+    for (const lang of LANGUAGES) {
+      if (lang.code === "ar") continue;
+      expect(isRtlLanguage(lang.code)).toBe(false);
     }
   });
 

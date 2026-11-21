@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Clock, MessageSquareText, Signal, Wifi } from "lucide-react";
 import type { MedicationRow, ReminderLogRow } from "@/lib/dosebridge-api";
 import { formatClockTime } from "@/lib/dosebridge-utils";
-import { buildSmsReminderText, type LanguageCode, type TranslationDict } from "@/lib/i18n";
+import { buildSmsReminderText, isRtlLanguage, type LanguageCode, type TranslationDict } from "@/lib/i18n";
 
 interface PhonePreviewProps {
   t: TranslationDict;
@@ -74,6 +74,7 @@ export function PhonePreview({
 
           <div
             ref={threadRef}
+            dir={isRtlLanguage(language) ? "rtl" : "ltr"}
             className="flex h-[360px] flex-col gap-3 overflow-y-auto px-4 py-4"
           >
             {liveText ? (

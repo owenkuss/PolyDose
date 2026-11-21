@@ -56,13 +56,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Set up simple, translated SMS medication reminders in 6 languages for patients and caregivers.",
+          "Set up simple, translated SMS medication reminders in the top 10 U.S. languages for patients and caregivers.",
       },
       { property: "og:title", content: "DoseBridge — Multilingual Medication Reminders" },
       {
         property: "og:description",
         content:
-          "Set up simple, translated SMS medication reminders in 6 languages for patients and caregivers.",
+          "Set up simple, translated SMS medication reminders in the top 10 U.S. languages for patients and caregivers.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
