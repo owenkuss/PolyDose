@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/jobs/send-reminders")({
         const authFailure = await authenticateCronRequest(request);
         if (authFailure) return authFailure;
 
-        let windowMinutes = 15;
+        let windowMinutes = 1;
         try {
           const raw = await request.text();
           if (raw.trim()) {
@@ -63,18 +63,8 @@ export const Route = createFileRoute("/api/public/jobs/send-reminders")({
             instructions: med.instructions,
           });
 
-          if (patient?.phone_number) {
-            const sms = await sendSmsViaTextbelt({
-              phone: normalizePhoneForSms(patient.phone_number),
-              message: messageText,
-            });
-            if (sms.success) {
-              smsSent += 1;
-            } else {
-              console.error(`SMS delivery failed for medication ${med.id}:`, sms.error);
-            }
-          }
-
+          // Claim the unique (medication_id, scheduled_key) slot BEFORE texting
+          // so overlapping cron runs or open browser tabs never duplicate an SMS.
           const { data: inserted, error: insertErr } = await supabaseAdmin
             .from("reminder_logs")
             .insert({
@@ -98,6 +88,18 @@ export const Route = createFileRoute("/api/public/jobs/send-reminders")({
             .from("medications")
             .update({ last_sent_at: inserted.sent_at })
             .eq("id", med.id);
+
+          if (patient?.phone_number) {
+            const sms = await sendSmsViaTextbelt({
+              phone: normalizePhoneForSms(patient.phone_number),
+              message: messageText,
+            });
+            if (sms.success) {
+              smsSent += 1;
+            } else {
+              console.error(`SMS delivery failed for medication ${med.id}:`, sms.error);
+            }
+          }
           sent += 1;
         }
 

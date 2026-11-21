@@ -36,6 +36,13 @@
       "when": 1795290031036,
       "tag": "0004_lock_down_medications_and_reminder_logs_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795292447693,
+      "tag": "0005_normalize_patient_phones_and_merge_duplicates",
+      "breakpoints": true
     }
   ]
 }

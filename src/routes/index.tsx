@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Clock, Globe, Phone, Pill, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { AddMedicationDialog } from "@/components/dosebridge/AddMedicationDialog";
@@ -87,6 +87,7 @@ function DoseBridgePage() {
   const [phonePopoverOpen, setPhonePopoverOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isAddingMed, setIsAddingMed] = useState(false);
+  const inFlightReminderKeysRef = useRef<Set<string>>(new Set());
 
   const t = TRANSLATIONS[language];
 
@@ -144,6 +145,9 @@ function DoseBridgePage() {
       for (const med of medications) {
         const scheduledKey = getDueScheduledKey(med, timezone, now, 1);
         if (!scheduledKey) continue;
+        const lockKey = `${med.id}:${scheduledKey}`;
+        if (inFlightReminderKeysRef.current.has(lockKey)) continue;
+        inFlightReminderKeysRef.current.add(lockKey);
         const messageText = buildSmsReminderText(language, {
           name: med.name,
           dosage: med.dosage,
@@ -159,16 +163,21 @@ function DoseBridgePage() {
               scheduledKey,
             },
           });
-          if (!active || !result.logged || !result.medication) continue;
-          setMedications((prev) =>
-            prev.map((m) => (m.id === med.id ? result.medication! : m)),
-          );
+          if (!active) continue;
+          if (result.medication) {
+            setMedications((prev) =>
+              prev.map((m) => (m.id === med.id ? result.medication! : m)),
+            );
+          }
+          if (!result.logged) continue;
           toast.success(`${t.autoSentToast}: ${med.name}`, { description: messageText });
           if (!result.smsSent) {
             toast.error(t.smsDeliveryFailed, { description: result.smsError ?? undefined });
           }
         } catch (err) {
           console.error("Automatic reminder dispatch failed:", err);
+        } finally {
+          inFlightReminderKeysRef.current.delete(lockKey);
         }
       }
     }
@@ -210,6 +219,7 @@ function DoseBridgePage() {
         timezone: tzToSave,
       });
       setPatient(saved);
+      setPhoneInput(saved.phone_number);
       window.localStorage.setItem(PHONE_STORAGE_KEY, saved.phone_number);
       const meds = await fetchMedications(saved.id);
       setMedications(meds);

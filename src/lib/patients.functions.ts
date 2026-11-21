@@ -1,7 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { Tables } from "@/integrations/supabase/types";
-import { DEFAULT_DEMO_PHONE, isValidPhoneNumber } from "@/lib/dosebridge-utils";
+import {
+  DEFAULT_DEMO_PHONE,
+  isValidPhoneNumber,
+  normalizePhoneForSms,
+} from "@/lib/dosebridge-utils";
 import { isLanguageCode, type LanguageCode } from "@/lib/i18n";
 
 type PatientRow = Tables<"patients">;
@@ -30,10 +34,12 @@ export const getPatientByPhone = createServerFn({ method: "POST" })
   .inputValidator((data) => PhoneLookupSchema.parse(data))
   .handler(async ({ data }): Promise<PatientRow | null> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const canonicalPhone = normalizePhoneForSms(data.phoneNumber);
+    if (!canonicalPhone) return null;
     const { data: patient, error } = await supabaseAdmin
       .from("patients")
       .select("*")
-      .eq("phone_number", data.phoneNumber)
+      .eq("phone_number", canonicalPhone)
       .maybeSingle();
     if (error) {
       console.error("Failed to look up patient:", error);
@@ -45,10 +51,11 @@ export const getPatientByPhone = createServerFn({ method: "POST" })
 export const getDemoPatient = createServerFn({ method: "GET" }).handler(
   async (): Promise<PatientRow | null> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const canonicalDemoPhone = normalizePhoneForSms(DEFAULT_DEMO_PHONE);
     const { data: patient, error } = await supabaseAdmin
       .from("patients")
       .select("*")
-      .eq("phone_number", DEFAULT_DEMO_PHONE)
+      .eq("phone_number", canonicalDemoPhone)
       .maybeSingle();
     if (error) {
       console.error("Failed to load demo patient:", error);
@@ -62,11 +69,12 @@ export const savePatientProfile = createServerFn({ method: "POST" })
   .inputValidator((data) => UpsertPatientSchema.parse(data))
   .handler(async ({ data }): Promise<PatientRow> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const canonicalPhone = normalizePhoneForSms(data.phoneNumber);
     const { data: patient, error } = await supabaseAdmin
       .from("patients")
       .upsert(
         {
-          phone_number: data.phoneNumber,
+          phone_number: canonicalPhone,
           language: data.language,
           timezone: data.timezone,
         },

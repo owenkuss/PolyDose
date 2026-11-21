@@ -235,5 +235,25 @@ describe("Typed time input", () => {
     expect(
       getDueScheduledKey(med, "America/New_York", new Date("2026-11-21T17:00:00Z"), 1),
     ).toBe("2026-11-21 12:00");
+    // 1 minute before (11:59 AM EST) and 1 minute after (12:01 PM EST) must NOT trigger.
+    expect(
+      getDueScheduledKey(med, "America/New_York", new Date("2026-11-21T16:59:59Z"), 1),
+    ).toBeNull();
+    expect(
+      getDueScheduledKey(med, "America/New_York", new Date("2026-11-21T17:01:00Z"), 1),
+    ).toBeNull();
+  });
+
+  it("normalizes differently formatted U.S. phone numbers to one canonical profile key", () => {
+    const formats = [
+      "4849193599",
+      "484-919-3599",
+      "(484) 919-3599",
+      "14849193599",
+      "+1 (484) 919-3599",
+    ];
+    for (const raw of formats) {
+      expect(normalizePhoneForSms(raw)).toBe("+14849193599");
+    }
   });
 });
