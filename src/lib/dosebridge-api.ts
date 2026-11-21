@@ -4,6 +4,7 @@ import type { LanguageCode } from "@/lib/i18n";
 
 export type PatientRow = Tables<"patients">;
 export type MedicationRow = Tables<"medications">;
+export type ReminderLogRow = Tables<"reminder_logs">;
 
 export async function loadPatientByPhone(phoneNumber: string): Promise<PatientRow | null> {
   const { data, error } = await supabase
@@ -115,24 +116,48 @@ export async function deleteMedication(medicationId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function markReminderSent(medicationId: string): Promise<MedicationRow> {
+export async function fetchReminderLogs(patientId: string): Promise<ReminderLogRow[]> {
   const { data, error } = await supabase
-    .from("medications")
-    .update({ last_sent_at: new Date().toISOString() })
-    .eq("id", medicationId)
+    .from("reminder_logs")
     .select("*")
-    .single();
+    .eq("patient_id", patientId)
+    .order("sent_at", { ascending: true })
+    .limit(50);
   if (error) throw error;
-  return data;
+  return data ?? [];
 }
 
-export async function markMedicationTaken(medicationId: string): Promise<MedicationRow> {
-  const { data, error } = await supabase
-    .from("medications")
-    .update({ last_confirmed_at: new Date().toISOString() })
-    .eq("id", medicationId)
+export async function recordAutomaticReminder(input: {
+  patientId: string;
+  medicationId: string;
+  messageText: string;
+  language: LanguageCode;
+  scheduledKey: string;
+}): Promise<{ log: ReminderLogRow; medication: MedicationRow } | null> {
+  const { data: log, error: logError } = await supabase
+    .from("reminder_logs")
+    .insert({
+      patient_id: input.patientId,
+      medication_id: input.medicationId,
+      message_text: input.messageText,
+      language: input.language,
+      scheduled_key: input.scheduledKey,
+    })
     .select("*")
     .single();
-  if (error) throw error;
-  return data;
+
+  if (logError) {
+    if (logError.code === "23505") return null;
+    throw logError;
+  }
+
+  const { data: medication, error: medError } = await supabase
+    .from("medications")
+    .update({ last_sent_at: log.sent_at })
+    .eq("id", input.medicationId)
+    .select("*")
+    .single();
+  if (medError) throw medError;
+
+  return { log, medication };
 }

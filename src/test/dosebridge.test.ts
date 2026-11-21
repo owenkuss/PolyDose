@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildSmsReminderText, LANGUAGES, TRANSLATIONS } from "@/lib/i18n";
-import { formatTime12h, isTakenToday, isValidPhoneNumber } from "@/lib/dosebridge-utils";
+import { formatTime12h, getDueScheduledKey, isValidPhoneNumber } from "@/lib/dosebridge-utils";
 
 describe("DoseBridge i18n and SMS rules", () => {
   it("supports all 6 requested languages with 7 day names", () => {
@@ -9,11 +9,11 @@ describe("DoseBridge i18n and SMS rules", () => {
       const dict = TRANSLATIONS[lang.code];
       expect(dict.daysShort).toHaveLength(7);
       expect(dict.addReminderBtn.length).toBeGreaterThan(0);
-      expect(dict.replyTakenBtn.length).toBeGreaterThan(0);
+      expect(dict.autoSendNote.length).toBeGreaterThan(0);
     }
   });
 
-  it("builds translated SMS reminders under 150 characters including medicine, dosage, instructions, and reply 1", () => {
+  it("builds translated SMS reminders under 150 characters without a Reply 1 prompt", () => {
     for (const lang of LANGUAGES) {
       const msg = buildSmsReminderText(lang.code, {
         name: "Metformin",
@@ -23,11 +23,11 @@ describe("DoseBridge i18n and SMS rules", () => {
       expect(msg.length).toBeLessThan(150);
       expect(msg).toContain("Metformin");
       expect(msg).toContain("500mg");
-      expect(msg).toContain("1");
+      expect(msg.toLowerCase()).not.toContain("reply 1");
     }
   });
 
-  it("caps long custom instructions strictly under 150 characters while preserving the Reply 1 prompt", () => {
+  it("caps long custom instructions strictly under 150 characters", () => {
     const longMsg = buildSmsReminderText("en", {
       name: "Atorvastatin Calcium",
       dosage: "20mg — 1 film-coated tablet",
@@ -35,14 +35,33 @@ describe("DoseBridge i18n and SMS rules", () => {
         "Take one tablet by mouth every evening after dinner with a full glass of water and avoid grapefruit juice",
     });
     expect(longMsg.length).toBeLessThan(150);
-    expect(longMsg).toContain("Reply 1 to confirm.");
+    expect(longMsg).toContain("Atorvastatin Calcium");
   });
 
-  it("detects Taken Today accurately against the given date", () => {
-    const now = new Date("2026-11-21T15:00:00Z");
-    expect(isTakenToday("2026-11-21T13:30:00Z", "America/New_York", now)).toBe(true);
-    expect(isTakenToday("2026-11-20T13:30:00Z", "America/New_York", now)).toBe(false);
-    expect(isTakenToday(null, "America/New_York", now)).toBe(false);
+  it("triggers automatic reminders only when active, on the right day and time, and not yet sent", () => {
+    // 2026-11-21 is Saturday (weekday 6). 13:00Z = 08:00 America/New_York (EST, UTC-5).
+    const sat8am = new Date("2026-11-21T13:00:00Z");
+    const med = {
+      is_active: true,
+      days_of_week: [0, 1, 2, 3, 4, 5, 6],
+      reminder_time: "08:00",
+      last_sent_at: null as string | null,
+    };
+    expect(getDueScheduledKey(med, "America/New_York", sat8am, 1)).toBe("2026-11-21 08:00");
+    expect(getDueScheduledKey({ ...med, is_active: false }, "America/New_York", sat8am, 1)).toBe(
+      null,
+    );
+    expect(
+      getDueScheduledKey({ ...med, days_of_week: [1, 2, 3] }, "America/New_York", sat8am, 1),
+    ).toBe(null);
+    expect(
+      getDueScheduledKey(
+        { ...med, last_sent_at: "2026-11-21T13:00:10Z" },
+        "America/New_York",
+        sat8am,
+        1,
+      ),
+    ).toBe(null);
   });
 
   it("validates phone numbers and formats 24h times to 12h", () => {

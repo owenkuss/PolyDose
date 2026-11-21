@@ -63,23 +63,101 @@ export function formatClockTime(date: Date, timezone?: string): string {
   }
 }
 
-export function isTakenToday(
-  lastConfirmedAt: string | null | undefined,
-  timezone?: string,
-  now: Date = new Date(),
-): boolean {
-  if (!lastConfirmedAt) return false;
-  const confirmed = new Date(lastConfirmedAt);
-  if (Number.isNaN(confirmed.getTime())) return false;
+const WEEKDAY_MAP: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
+export interface LocalDateParts {
+  dateKey: string;
+  weekday: number;
+  hour: number;
+  minute: number;
+  minutesOfDay: number;
+}
+
+export function getLocalDateParts(date: Date, timezone: string): LocalDateParts {
   try {
-    const fmt = new Intl.DateTimeFormat("en-CA", {
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-      ...(timezone ? { timeZone: timezone } : {}),
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
     });
-    return fmt.format(confirmed) === fmt.format(now);
+    const parts = fmt.formatToParts(date);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+    const year = get("year");
+    const month = get("month");
+    const day = get("day");
+    const weekday = WEEKDAY_MAP[get("weekday")] ?? date.getDay();
+    const hour = Number(get("hour")) % 24;
+    const minute = Number(get("minute"));
+    return {
+      dateKey: `${year}-${month}-${day}`,
+      weekday,
+      hour,
+      minute,
+      minutesOfDay: hour * 60 + minute,
+    };
   } catch {
-    return confirmed.toDateString() === now.toDateString();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return {
+      dateKey: `${y}-${m}-${d}`,
+      weekday: date.getDay(),
+      hour,
+      minute,
+      minutesOfDay: hour * 60 + minute,
+    };
   }
+}
+
+export function getDueScheduledKey(
+  med: {
+    is_active: boolean;
+    days_of_week: number[];
+    reminder_time: string;
+    last_sent_at?: string | null;
+  },
+  timezone: string,
+  now: Date = new Date(),
+  windowMinutes = 1,
+): string | null {
+  if (!med.is_active || med.days_of_week.length === 0) return null;
+  const [hStr, mStr] = med.reminder_time.split(":");
+  const schedHour = Number(hStr);
+  const schedMin = Number(mStr);
+  if (Number.isNaN(schedHour) || Number.isNaN(schedMin)) return null;
+
+  const localNow = getLocalDateParts(now, timezone);
+  if (!med.days_of_week.includes(localNow.weekday)) return null;
+
+  const schedMins = schedHour * 60 + schedMin;
+  if (localNow.minutesOfDay < schedMins || localNow.minutesOfDay >= schedMins + windowMinutes) {
+    return null;
+  }
+
+  if (med.last_sent_at) {
+    const sentDate = new Date(med.last_sent_at);
+    if (!Number.isNaN(sentDate.getTime())) {
+      const localSent = getLocalDateParts(sentDate, timezone);
+      if (localSent.dateKey === localNow.dateKey && localSent.minutesOfDay >= schedMins) {
+        return null;
+      }
+    }
+  }
+
+  return `${localNow.dateKey} ${med.reminder_time}`;
 }

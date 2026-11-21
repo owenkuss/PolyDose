@@ -1,10 +1,10 @@
-import { CheckCircle2, Clock, Pill, Send, Trash2 } from "lucide-react";
+import { Clock, Pill, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import type { MedicationRow } from "@/lib/dosebridge-api";
-import { formatTime12h, isTakenToday } from "@/lib/dosebridge-utils";
+import { formatClockTime, formatTime12h } from "@/lib/dosebridge-utils";
 import type { TranslationDict } from "@/lib/i18n";
 
 interface MedicationListProps {
@@ -15,7 +15,6 @@ interface MedicationListProps {
   onSelect: (med: MedicationRow) => void;
   onToggleActive: (med: MedicationRow, nextActive: boolean) => void;
   onDelete: (med: MedicationRow) => void;
-  onSendTest: (med: MedicationRow) => void;
 }
 
 export function MedicationList({
@@ -26,7 +25,6 @@ export function MedicationList({
   onSelect,
   onToggleActive,
   onDelete,
-  onSendTest,
 }: MedicationListProps) {
   return (
     <section aria-labelledby="schedule-heading" className="space-y-4">
@@ -51,8 +49,10 @@ export function MedicationList({
       ) : (
         <div className="space-y-3">
           {medications.map((med) => {
-            const takenToday = isTakenToday(med.last_confirmed_at, timezone);
             const isSelected = med.id === selectedMedId;
+            const lastSentText = med.last_sent_at
+              ? `${t.lastSentLabel}: ${formatClockTime(new Date(med.last_sent_at), timezone)}`
+              : t.autoSendNote;
             return (
               <Card
                 key={med.id}
@@ -69,12 +69,6 @@ export function MedicationList({
                       <div className="flex flex-wrap items-center gap-2">
                         <Pill className="h-5 w-5 text-primary" aria-hidden="true" />
                         <h3 className="text-xl font-bold text-foreground">{med.name}</h3>
-                        {takenToday && (
-                          <Badge className="gap-1 border border-success/30 bg-success-muted px-2.5 py-0.5 text-sm font-bold text-success hover:bg-success-muted">
-                            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                            {t.takenTodayBadge}
-                          </Badge>
-                        )}
                       </div>
                       <p className="text-base font-medium text-foreground">{med.dosage}</p>
                       {med.instructions && (
@@ -125,14 +119,9 @@ export function MedicationList({
                     className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Button
-                      type="button"
-                      onClick={() => onSendTest(med)}
-                      className="h-11 gap-2 px-4 text-base font-bold"
-                    >
-                      <Send className="h-4 w-4" aria-hidden="true" />
-                      {t.sendTestBtn}
-                    </Button>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {lastSentText}
+                    </span>
                     <Button
                       type="button"
                       variant="outline"

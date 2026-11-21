@@ -4,25 +4,27 @@ import { Globe, HeartPulse } from "lucide-react";
 import { toast } from "sonner";
 import { AddMedicationCard } from "@/components/dosebridge/AddMedicationCard";
 import { MedicationList } from "@/components/dosebridge/MedicationList";
-import { PhonePreview, type SmsBubble } from "@/components/dosebridge/PhonePreview";
+import { PhonePreview } from "@/components/dosebridge/PhonePreview";
 import { ProfileBar } from "@/components/dosebridge/ProfileBar";
 import {
   createMedication,
   deleteMedication,
   fetchMedications,
+  fetchReminderLogs,
   loadFirstPatient,
   loadPatientByPhone,
-  markMedicationTaken,
-  markReminderSent,
+  recordAutomaticReminder,
   toggleMedicationActive,
   updatePatientLanguage,
   upsertPatientProfile,
   type MedicationRow,
   type PatientRow,
+  type ReminderLogRow,
 } from "@/lib/dosebridge-api";
 import {
   DEFAULT_DEMO_PHONE,
   detectBrowserTimezone,
+  getDueScheduledKey,
   isValidPhoneNumber,
 } from "@/lib/dosebridge-utils";
 import {
@@ -64,10 +66,9 @@ function DoseBridgePage() {
   const [timezone, setTimezone] = useState("America/New_York");
   const [medications, setMedications] = useState<MedicationRow[]>([]);
   const [selectedMedId, setSelectedMedId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<SmsBubble[]>([]);
+  const [reminderLogs, setReminderLogs] = useState<ReminderLogRow[]>([]);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isAddingMed, setIsAddingMed] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
 
   const t = TRANSLATIONS[language];
 
@@ -94,9 +95,13 @@ function DoseBridgePage() {
           if (isLanguageCode(found.language)) {
             setLanguage(found.language);
           }
-          const meds = await fetchMedications(found.id);
+          const [meds, logs] = await Promise.all([
+            fetchMedications(found.id),
+            fetchReminderLogs(found.id),
+          ]);
           if (cancelled) return;
           setMedications(meds);
+          setReminderLogs(logs);
           setSelectedMedId(meds[0]?.id ?? null);
         } else {
           setTimezone(browserTz);
@@ -111,6 +116,54 @@ function DoseBridgePage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!patient || medications.length === 0) return;
+    let active = true;
+
+    async function checkDueReminders() {
+      if (!patient) return;
+      const now = new Date();
+      for (const med of medications) {
+        const scheduledKey = getDueScheduledKey(med, timezone, now, 1);
+        if (!scheduledKey) continue;
+        const messageText = buildSmsReminderText(language, {
+          name: med.name,
+          dosage: med.dosage,
+          instructions: med.instructions,
+        });
+        try {
+          const result = await recordAutomaticReminder({
+            patientId: patient.id,
+            medicationId: med.id,
+            messageText,
+            language,
+            scheduledKey,
+          });
+          if (!active || !result) continue;
+          setReminderLogs((prev) =>
+            prev.some((l) => l.id === result.log.id) ? prev : [...prev, result.log],
+          );
+          setMedications((prev) =>
+            prev.map((m) => (m.id === med.id ? result.medication : m)),
+          );
+          toast.success(`${t.autoSentToast}: ${med.name}`);
+        } catch (err) {
+          console.error("Automatic reminder dispatch failed:", err);
+        }
+      }
+    }
+
+    void checkDueReminders();
+    const intervalId = window.setInterval(() => {
+      void checkDueReminders();
+    }, 15_000);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, [patient, medications, timezone, language, t.autoSentToast]);
 
   async function handleLanguageSwitch(nextLang: LanguageCode) {
     setLanguage(nextLang);
@@ -138,8 +191,12 @@ function DoseBridgePage() {
       });
       setPatient(saved);
       window.localStorage.setItem(PHONE_STORAGE_KEY, saved.phone_number);
-      const meds = await fetchMedications(saved.id);
+      const [meds, logs] = await Promise.all([
+        fetchMedications(saved.id),
+        fetchReminderLogs(saved.id),
+      ]);
       setMedications(meds);
+      setReminderLogs(logs);
       setSelectedMedId(meds[0]?.id ?? null);
       toast.success(t.profileSavedToast);
     } catch (err) {
@@ -215,72 +272,10 @@ function DoseBridgePage() {
         }
         return next;
       });
+      setReminderLogs((prev) => prev.filter((l) => l.medication_id !== med.id));
       toast.success(t.medDeletedToast);
     } catch (err) {
       console.error("Delete medication failed:", err);
-    }
-  }
-
-  async function handleSendTestReminder(med: MedicationRow) {
-    setSelectedMedId(med.id);
-    const smsText = buildSmsReminderText(language, {
-      name: med.name,
-      dosage: med.dosage,
-      instructions: med.instructions,
-    });
-    const now = new Date();
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `sms-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        sender: "dosebridge",
-        medicationId: med.id,
-        text: smsText,
-        sentAt: now,
-      },
-    ]);
-    toast.success(t.testSentToast);
-    try {
-      const updated = await markReminderSent(med.id);
-      setMedications((prev) => prev.map((m) => (m.id === med.id ? updated : m)));
-    } catch (err) {
-      console.error("Failed to record last_sent_at:", err);
-    }
-  }
-
-  async function handleReplyTaken(medicationId: string) {
-    setIsConfirming(true);
-    const now = new Date();
-    const prevMeds = medications;
-    setMedications((prev) =>
-      prev.map((m) => (m.id === medicationId ? { ...m, last_confirmed_at: now.toISOString() } : m)),
-    );
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `reply-${Date.now()}`,
-        sender: "patient",
-        medicationId,
-        text: "1",
-        sentAt: now,
-      },
-      {
-        id: `ack-${Date.now() + 1}`,
-        sender: "dosebridge",
-        medicationId,
-        text: t.replySentAck,
-        sentAt: new Date(now.getTime() + 1000),
-      },
-    ]);
-    try {
-      const updated = await markMedicationTaken(medicationId);
-      setMedications((prev) => prev.map((m) => (m.id === medicationId ? updated : m)));
-      toast.success(t.takenConfirmedToast);
-    } catch (err) {
-      console.error("Failed to confirm adherence:", err);
-      setMedications(prevMeds);
-    } finally {
-      setIsConfirming(false);
     }
   }
 
@@ -357,7 +352,6 @@ function DoseBridgePage() {
               onSelect={(med) => setSelectedMedId(med.id)}
               onToggleActive={handleToggleActive}
               onDelete={handleDeleteMedication}
-              onSendTest={handleSendTestReminder}
             />
           </div>
 
@@ -367,9 +361,7 @@ function DoseBridgePage() {
             phoneNumber={phoneInput}
             timezone={timezone}
             activeMedication={activeMedication}
-            messages={messages}
-            isConfirming={isConfirming}
-            onReplyTaken={handleReplyTaken}
+            logs={reminderLogs}
           />
         </div>
       </main>

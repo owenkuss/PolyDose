@@ -45,23 +45,21 @@ export interface TranslationDict {
   scheduleEmpty: string;
   activeBadge: string;
   pausedBadge: string;
-  takenTodayBadge: string;
-  sendTestBtn: string;
   deleteBtn: string;
-  testSentToast: string;
   medDeletedToast: string;
-  takenConfirmedToast: string;
+  autoSendNote: string;
+  autoSentToast: string;
+  lastSentLabel: string;
   phonePreviewTitle: string;
   phonePreviewSubtitle: string;
   smsHeaderSub: string;
   liveTemplateLabel: string;
+  sentHistoryLabel: string;
+  waitingForSchedule: string;
   charsLabel: string;
-  replyTakenBtn: string;
-  replySentAck: string;
   noMedPreview: string;
   daysShort: readonly [string, string, string, string, string, string, string];
   smsPrefix: string;
-  smsReplyPrompt: string;
 }
 
 export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
@@ -95,23 +93,21 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     scheduleEmpty: "No reminders yet. Add a medication above to get started.",
     activeBadge: "Active",
     pausedBadge: "Paused",
-    takenTodayBadge: "Taken Today",
-    sendTestBtn: "Send Test Reminder",
     deleteBtn: "Delete",
-    testSentToast: "Test reminder sent",
     medDeletedToast: "Medication removed",
-    takenConfirmedToast: "Marked as Taken Today",
+    autoSendNote: "Sends automatically at scheduled time",
+    autoSentToast: "Automatic medication reminder sent",
+    lastSentLabel: "Last sent",
     phonePreviewTitle: "Live SMS Phone Preview",
-    phonePreviewSubtitle: "See the exact text message the patient receives.",
+    phonePreviewSubtitle: "Messages appear here automatically when it is time to take pills.",
     smsHeaderSub: "DoseBridge Health SMS",
     liveTemplateLabel: "Next message preview",
+    sentHistoryLabel: "Sent automatically",
+    waitingForSchedule: "Messages will arrive automatically at each scheduled pill time.",
     charsLabel: "chars",
-    replyTakenBtn: "Reply 1 (Taken)",
-    replySentAck: "Great job! We marked your dose as taken today.",
     noMedPreview: "Add a medication to preview your translated SMS reminder.",
     daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     smsPrefix: "DoseBridge: Time for",
-    smsReplyPrompt: "Reply 1 to confirm.",
   },
   es: {
     tagline: "Recordatorios de Medicinas en Tu Idioma",
@@ -143,23 +139,21 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     scheduleEmpty: "Aún no hay recordatorios. Agrega una medicina arriba.",
     activeBadge: "Activo",
     pausedBadge: "Pausado",
-    takenTodayBadge: "Tomada Hoy",
-    sendTestBtn: "Enviar Prueba",
     deleteBtn: "Eliminar",
-    testSentToast: "Mensaje de prueba enviado",
     medDeletedToast: "Medicina eliminada",
-    takenConfirmedToast: "Marcada como Tomada Hoy",
+    autoSendNote: "Se envía automáticamente a la hora programada",
+    autoSentToast: "Recordatorio automático enviado",
+    lastSentLabel: "Último envío",
     phonePreviewTitle: "Vista Previa del SMS",
-    phonePreviewSubtitle: "Mira el mensaje exacto que recibe el paciente.",
+    phonePreviewSubtitle: "Los mensajes llegan automáticamente cuando toca tomar la medicina.",
     smsHeaderSub: "DoseBridge Salud SMS",
     liveTemplateLabel: "Vista previa del mensaje",
+    sentHistoryLabel: "Enviado automáticamente",
+    waitingForSchedule: "Los mensajes llegarán automáticamente a cada hora programada.",
     charsLabel: "caracteres",
-    replyTakenBtn: "Responder 1 (Tomada)",
-    replySentAck: "¡Muy bien! Anotamos tu dosis como tomada hoy.",
     noMedPreview: "Agrega una medicina para ver el mensaje traducido.",
     daysShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
     smsPrefix: "DoseBridge: Hora de",
-    smsReplyPrompt: "Responde 1 para confirmar.",
   },
   zh: {
     tagline: "多语言服药提醒助手",
@@ -191,23 +185,21 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     scheduleEmpty: "暂无提醒，请在上方添加一种药物。",
     activeBadge: "已开启",
     pausedBadge: "已暂停",
-    takenTodayBadge: "今日已服",
-    sendTestBtn: "发送测试提醒",
     deleteBtn: "删除",
-    testSentToast: "测试提醒已发送",
     medDeletedToast: "药物已删除",
-    takenConfirmedToast: "已标记为今日已服",
+    autoSendNote: "到设定时间自动发送提醒",
+    autoSentToast: "已自动发送服药提醒",
+    lastSentLabel: "上次发送",
     phonePreviewTitle: "实时手机短信预览",
-    phonePreviewSubtitle: "查看患者手机上收到的真实提醒短信。",
+    phonePreviewSubtitle: "到了服药时间，提醒短信会自动显示在这里。",
     smsHeaderSub: "DoseBridge 健康短信",
     liveTemplateLabel: "下一条短信预览",
+    sentHistoryLabel: "已自动发送",
+    waitingForSchedule: "到每个服药时间后，短信将自动送达。",
     charsLabel: "字",
-    replyTakenBtn: "回复 1（已服用）",
-    replySentAck: "太棒了！已记录您今日按时服药。",
     noMedPreview: "添加药物后即可预览对应语言的短信提醒。",
     daysShort: ["周日", "周一", "周二", "周三", "周四", "周五", "周六"],
     smsPrefix: "DoseBridge提醒：请服用",
-    smsReplyPrompt: "回复1确认已服。",
   },
   fr: {
     tagline: "Rappels de Médicaments Multilingues",
@@ -239,23 +231,21 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     scheduleEmpty: "Aucun rappel. Ajoutez un médicament ci-dessus.",
     activeBadge: "Actif",
     pausedBadge: "En pause",
-    takenTodayBadge: "Pris Aujourd'hui",
-    sendTestBtn: "Envoyer un Test",
     deleteBtn: "Supprimer",
-    testSentToast: "Rappel test envoyé",
     medDeletedToast: "Médicament supprimé",
-    takenConfirmedToast: "Marqué comme Pris Aujourd'hui",
+    autoSendNote: "Envoi automatique à l'heure prévue",
+    autoSentToast: "Rappel automatique envoyé",
+    lastSentLabel: "Dernier envoi",
     phonePreviewTitle: "Aperçu SMS en Direct",
-    phonePreviewSubtitle: "Voyez le texte exact reçu par le patient.",
+    phonePreviewSubtitle: "Les messages arrivent automatiquement à l'heure de la prise.",
     smsHeaderSub: "DoseBridge Santé SMS",
     liveTemplateLabel: "Aperçu du prochain SMS",
+    sentHistoryLabel: "Envoyé automatiquement",
+    waitingForSchedule: "Les rappels s'afficheront automatiquement à chaque heure prévue.",
     charsLabel: "car.",
-    replyTakenBtn: "Répondre 1 (Pris)",
-    replySentAck: "Bravo ! Votre prise d'aujourd'hui est confirmée.",
     noMedPreview: "Ajoutez un médicament pour voir l'aperçu du SMS.",
     daysShort: ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
     smsPrefix: "DoseBridge : Prenez",
-    smsReplyPrompt: "Répondez 1 pour confirmer.",
   },
   vi: {
     tagline: "Nhắc Uống Thuốc Đa Ngôn Ngữ",
@@ -287,23 +277,21 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     scheduleEmpty: "Chưa có lịch nhắc. Hãy thêm thuốc ở trên.",
     activeBadge: "Đang bật",
     pausedBadge: "Tạm dừng",
-    takenTodayBadge: "Đã Uống Hôm Nay",
-    sendTestBtn: "Gửi Tin Nhắn Thử",
     deleteBtn: "Xóa",
-    testSentToast: "Đã gửi tin nhắn thử",
     medDeletedToast: "Đã xóa thuốc",
-    takenConfirmedToast: "Đã đánh dấu Đã Uống Hôm Nay",
+    autoSendNote: "Tự động gửi đúng giờ đã đặt",
+    autoSentToast: "Đã tự động gửi tin nhắn nhắc thuốc",
+    lastSentLabel: "Gửi gần nhất",
     phonePreviewTitle: "Xem Trước Tin Nhắn SMS",
-    phonePreviewSubtitle: "Xem chính xác tin nhắn bệnh nhân sẽ nhận được.",
+    phonePreviewSubtitle: "Tin nhắn sẽ tự động hiển thị tại đây khi đến giờ uống thuốc.",
     smsHeaderSub: "DoseBridge Y Tế SMS",
     liveTemplateLabel: "Xem trước tin nhắn kế tiếp",
+    sentHistoryLabel: "Đã gửi tự động",
+    waitingForSchedule: "Tin nhắn sẽ tự động gửi đến vào mỗi giờ uống thuốc đã đặt.",
     charsLabel: "ký tự",
-    replyTakenBtn: "Trả lời 1 (Đã uống)",
-    replySentAck: "Tuyệt vời! Chúng tôi đã ghi nhận bạn đã uống thuốc hôm nay.",
     noMedPreview: "Thêm một loại thuốc để xem trước tin nhắn nhắc nhở.",
     daysShort: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
     smsPrefix: "DoseBridge: Đến giờ uống",
-    smsReplyPrompt: "Trả lời 1 để xác nhận.",
   },
   ht: {
     tagline: "Rapèl Medikaman nan Lang Ou",
@@ -335,23 +323,21 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     scheduleEmpty: "Poko gen rapèl. Ajoute yon medikaman anwo a.",
     activeBadge: "Aktif",
     pausedBadge: "Sou Pòz",
-    takenTodayBadge: "Pran Jodi a",
-    sendTestBtn: "Voye Tès SMS",
     deleteBtn: "Efase",
-    testSentToast: "Tès rapèl la voye",
     medDeletedToast: "Medikaman an efase",
-    takenConfirmedToast: "Make kòm Pran Jodi a",
+    autoSendNote: "Voye otomatikman nan lè ki pwograme a",
+    autoSentToast: "Rapèl medikaman otomatik la voye",
+    lastSentLabel: "Dènye mesaj voye",
     phonePreviewTitle: "Apèsi SMS sou Telefòn",
-    phonePreviewSubtitle: "Gade egzakteman mesaj pasyan an ap resevwa.",
+    phonePreviewSubtitle: "Mesaj yo parèt la otomatikman lè li lè pou pran grenn yo.",
     smsHeaderSub: "DoseBridge Sante SMS",
     liveTemplateLabel: "Apèsi pwochen mesaj la",
+    sentHistoryLabel: "Voye otomatikman",
+    waitingForSchedule: "Mesaj yo ap rive otomatikman nan chak lè ki pwograme.",
     charsLabel: "lèt",
-    replyTakenBtn: "Reponn 1 (Pran)",
-    replySentAck: "Bèl travay! Nou make dòz ou kòm pran jodi a.",
     noMedPreview: "Ajoute yon medikaman pou wè apèsi SMS la.",
     daysShort: ["Dim", "Len", "Mad", "Mèk", "Jed", "Van", "Sam"],
     smsPrefix: "DoseBridge: Lè pou pran",
-    smsReplyPrompt: "Reponn 1 pou konfime.",
   },
 };
 
@@ -371,15 +357,12 @@ export function buildSmsReminderText(
   const cleanInst = med.instructions.trim();
   const sep = lang === "zh" ? "，" : ". ";
   const space = lang === "zh" ? "" : " ";
+  const end = lang === "zh" ? "。" : ".";
 
   const core = `${t.smsPrefix}${space}${cleanName} (${cleanDosage})`;
-  const withInst = cleanInst ? `${core}${sep}${cleanInst}` : core;
-  const full = `${withInst}${sep}${t.smsReplyPrompt}`;
+  const full = cleanInst ? `${core}${sep}${cleanInst}${end}` : `${core}${end}`;
   if (full.length <= MAX_SMS_LENGTH) return full;
 
-  const suffix = `${sep}${t.smsReplyPrompt}`;
-  const available = MAX_SMS_LENGTH - suffix.length;
-  if (available <= 10) return full.slice(0, MAX_SMS_LENGTH);
-  const clipped = withInst.slice(0, available - 1).trimEnd();
-  return `${clipped}…${suffix}`;
+  const clipped = full.slice(0, MAX_SMS_LENGTH - 1).trimEnd();
+  return `${clipped}…`;
 }

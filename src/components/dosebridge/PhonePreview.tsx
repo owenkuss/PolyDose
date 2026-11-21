@@ -1,17 +1,8 @@
 import { useEffect, useRef } from "react";
-import { CheckCircle2, MessageSquareText, Send, Signal, Wifi } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { MedicationRow } from "@/lib/dosebridge-api";
-import { formatClockTime, isTakenToday } from "@/lib/dosebridge-utils";
+import { Clock, MessageSquareText, Signal, Wifi } from "lucide-react";
+import type { MedicationRow, ReminderLogRow } from "@/lib/dosebridge-api";
+import { formatClockTime } from "@/lib/dosebridge-utils";
 import { buildSmsReminderText, type LanguageCode, type TranslationDict } from "@/lib/i18n";
-
-export interface SmsBubble {
-  id: string;
-  sender: "dosebridge" | "patient";
-  medicationId: string;
-  text: string;
-  sentAt: Date;
-}
 
 interface PhonePreviewProps {
   t: TranslationDict;
@@ -19,9 +10,7 @@ interface PhonePreviewProps {
   phoneNumber: string;
   timezone: string;
   activeMedication: MedicationRow | null;
-  messages: SmsBubble[];
-  isConfirming: boolean;
-  onReplyTaken: (medicationId: string) => void;
+  logs: ReminderLogRow[];
 }
 
 export function PhonePreview({
@@ -30,9 +19,7 @@ export function PhonePreview({
   phoneNumber,
   timezone,
   activeMedication,
-  messages,
-  isConfirming,
-  onReplyTaken,
+  logs,
 }: PhonePreviewProps) {
   const threadRef = useRef<HTMLDivElement | null>(null);
 
@@ -40,7 +27,7 @@ export function PhonePreview({
     if (threadRef.current) {
       threadRef.current.scrollTop = threadRef.current.scrollHeight;
     }
-  }, [messages.length]);
+  }, [logs.length]);
 
   const liveText = activeMedication
     ? buildSmsReminderText(language, {
@@ -49,12 +36,6 @@ export function PhonePreview({
         instructions: activeMedication.instructions,
       })
     : null;
-
-  const lastDosebridgeMsg = [...messages].reverse().find((m) => m.sender === "dosebridge");
-  const replyTargetMedId = lastDosebridgeMsg?.medicationId ?? activeMedication?.id ?? null;
-  const isActiveTaken = activeMedication
-    ? isTakenToday(activeMedication.last_confirmed_at, timezone)
-    : false;
 
   return (
     <aside
@@ -113,44 +94,28 @@ export function PhonePreview({
               </div>
             )}
 
-            {messages.map((msg) => {
-              const isPatient = msg.sender === "patient";
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${isPatient ? "items-end" : "items-start"}`}
-                >
-                  <div
-                    className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-xs ${
-                      isPatient
-                        ? "rounded-br-sm bg-sms-outgoing font-bold text-sms-outgoing-foreground"
-                        : "rounded-bl-sm bg-sms-incoming text-sms-incoming-foreground"
-                    }`}
-                  >
-                    {msg.text}
+            {logs.length > 0 && (
+              <div className="space-y-2.5 pt-2">
+                <p className="text-center text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                  {t.sentHistoryLabel}
+                </p>
+                {logs.map((log) => (
+                  <div key={log.id} className="flex flex-col items-start">
+                    <div className="max-w-[92%] rounded-2xl rounded-bl-sm bg-sms-incoming px-4 py-2.5 text-sm leading-relaxed text-sms-incoming-foreground shadow-xs">
+                      {log.message_text}
+                    </div>
+                    <span className="mt-1 px-1 text-[11px] text-muted-foreground">
+                      {formatClockTime(new Date(log.sent_at), timezone)}
+                    </span>
                   </div>
-                  <span className="mt-1 px-1 text-[11px] text-muted-foreground">
-                    {formatClockTime(msg.sentAt, timezone)}
-                  </span>
-                </div>
-              );
-            })}
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="border-t border-border bg-card p-3">
-            <Button
-              type="button"
-              disabled={!replyTargetMedId || isConfirming}
-              onClick={() => replyTargetMedId && onReplyTaken(replyTargetMedId)}
-              className="h-12 w-full gap-2 bg-success text-base font-bold text-success-foreground hover:bg-success/90"
-            >
-              {isActiveTaken ? (
-                <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-              ) : (
-                <Send className="h-4 w-4" aria-hidden="true" />
-              )}
-              {t.replyTakenBtn}
-            </Button>
+          <div className="flex items-center gap-2 border-t border-border bg-card px-4 py-3 text-xs font-medium text-muted-foreground">
+            <Clock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <span>{t.waitingForSchedule}</span>
           </div>
         </div>
       </div>

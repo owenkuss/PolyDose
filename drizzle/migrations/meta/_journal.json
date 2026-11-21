@@ -8,6 +8,13 @@
       "when": 1795278268102,
       "tag": "0000_create_dosebridge_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795278946797,
+      "tag": "0001_create_reminder_logs_table",
+      "breakpoints": true
     }
   ]
 }

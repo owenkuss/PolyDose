@@ -88,6 +88,51 @@ export type Database = {
         }
         Relationships: []
       }
+      reminder_logs: {
+        Row: {
+          id: string
+          language: string
+          medication_id: string
+          message_text: string
+          patient_id: string
+          scheduled_key: string
+          sent_at: string
+        }
+        Insert: {
+          id?: string
+          language?: string
+          medication_id: string
+          message_text: string
+          patient_id: string
+          scheduled_key: string
+          sent_at?: string
+        }
+        Update: {
+          id?: string
+          language?: string
+          medication_id?: string
+          message_text?: string
+          patient_id?: string
+          scheduled_key?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_logs_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminder_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
