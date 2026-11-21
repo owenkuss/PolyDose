@@ -22,7 +22,6 @@ import {
   fetchMedications,
   loadFirstPatient,
   loadPatientByPhone,
-  recordAutomaticReminder,
   toggleMedicationActive,
   updateMedication,
   updatePatientLanguage,
@@ -48,6 +47,7 @@ import {
   type LanguageCode,
 } from "@/lib/i18n";
 import { generateSmsReminder } from "@/lib/gemini-reminders.functions";
+import { sendReminderSms } from "@/lib/sms.functions";
 
 const PHONE_STORAGE_KEY = "dosebridge_phone";
 
@@ -150,18 +150,23 @@ function DoseBridgePage() {
           instructions: med.instructions,
         });
         try {
-          const result = await recordAutomaticReminder({
-            patientId: patient.id,
-            medicationId: med.id,
-            messageText,
-            language,
-            scheduledKey,
+          const result = await sendReminderSms({
+            data: {
+              patientId: patient.id,
+              medicationId: med.id,
+              messageText,
+              language,
+              scheduledKey,
+            },
           });
-          if (!active || !result) continue;
+          if (!active || !result.logged || !result.medication) continue;
           setMedications((prev) =>
-            prev.map((m) => (m.id === med.id ? result.medication : m)),
+            prev.map((m) => (m.id === med.id ? result.medication! : m)),
           );
           toast.success(`${t.autoSentToast}: ${med.name}`, { description: messageText });
+          if (!result.smsSent) {
+            toast.error(t.smsDeliveryFailed, { description: result.smsError ?? undefined });
+          }
         } catch (err) {
           console.error("Automatic reminder dispatch failed:", err);
         }
@@ -342,19 +347,25 @@ function DoseBridgePage() {
       console.error("Gemini SMS generation failed, using template:", err);
     }
     try {
-      const result = await recordAutomaticReminder({
-        patientId: patient.id,
-        medicationId: med.id,
-        messageText,
-        language,
-        scheduledKey: `test-${Date.now()}`,
+      const result = await sendReminderSms({
+        data: {
+          patientId: patient.id,
+          medicationId: med.id,
+          messageText,
+          language,
+          scheduledKey: `test-${Date.now()}`,
+        },
       });
-      if (result) {
+      if (result.medication) {
         setMedications((prev) =>
-          prev.map((m) => (m.id === med.id ? result.medication : m)),
+          prev.map((m) => (m.id === med.id ? result.medication! : m)),
         );
       }
-      toast.success(t.testSentToast, { description: messageText });
+      if (result.smsSent) {
+        toast.success(t.testSentToast, { description: messageText });
+      } else {
+        toast.error(t.smsDeliveryFailed, { description: result.smsError ?? undefined });
+      }
     } catch (err) {
       console.error("Send test reminder failed:", err);
     }

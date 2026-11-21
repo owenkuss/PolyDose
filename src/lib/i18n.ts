@@ -83,6 +83,7 @@ export interface TranslationDict {
   takenShortBadge: string;
   testShortBtn: string;
   testSentToast: string;
+  smsDeliveryFailed: string;
   todayLabel: string;
   deleteBtn: string;
   medDeletedToast: string;
@@ -170,6 +171,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "Taken",
     testShortBtn: "Test",
     testSentToast: "Test reminder sent",
+    smsDeliveryFailed: "Text message could not be delivered",
     todayLabel: "Today",
     deleteBtn: "Delete",
     medDeletedToast: "Medication removed",
@@ -255,6 +257,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "Tomada",
     testShortBtn: "Prueba",
     testSentToast: "Mensaje de prueba enviado",
+    smsDeliveryFailed: "No se pudo entregar el mensaje de texto",
     todayLabel: "Hoy",
     deleteBtn: "Eliminar",
     medDeletedToast: "Medicina eliminada",
@@ -340,6 +343,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "已服",
     testShortBtn: "测试",
     testSentToast: "测试提醒已发送",
+    smsDeliveryFailed: "短信无法送达",
     todayLabel: "今天",
     deleteBtn: "删除",
     medDeletedToast: "药物已删除",
@@ -425,6 +429,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "Pris",
     testShortBtn: "Test",
     testSentToast: "Rappel test envoyé",
+    smsDeliveryFailed: "Le SMS n'a pas pu être envoyé",
     todayLabel: "Aujourd'hui",
     deleteBtn: "Supprimer",
     medDeletedToast: "Médicament supprimé",
@@ -510,6 +515,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "Đã uống",
     testShortBtn: "Thử",
     testSentToast: "Đã gửi tin nhắn thử",
+    smsDeliveryFailed: "Không thể gửi tin nhắn văn bản",
     todayLabel: "Hôm nay",
     deleteBtn: "Xóa",
     medDeletedToast: "Đã xóa thuốc",
@@ -595,6 +601,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "Pran",
     testShortBtn: "Tès",
     testSentToast: "Tès rapèl la voye",
+    smsDeliveryFailed: "Mesaj tèks la pa t ka voye",
     todayLabel: "Jodi a",
     deleteBtn: "Efase",
     medDeletedToast: "Medikaman an efase",
@@ -680,6 +687,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "Nauuman",
     testShortBtn: "Subok",
     testSentToast: "Naipadala ang paalalang pangsubok",
+    smsDeliveryFailed: "Hindi naipadala ang text message",
     todayLabel: "Ngayon",
     deleteBtn: "Burahin",
     medDeletedToast: "Tinanggal ang gamot",
@@ -765,6 +773,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "تم الأخذ",
     testShortBtn: "تجربة",
     testSentToast: "تم إرسال تذكير تجريبي",
+    smsDeliveryFailed: "تعذر إرسال الرسالة النصية",
     todayLabel: "اليوم",
     deleteBtn: "حذف",
     medDeletedToast: "تم حذف الدواء",
@@ -850,6 +859,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "복용 완료",
     testShortBtn: "테스트",
     testSentToast: "테스트 알림이 전송되었습니다",
+    smsDeliveryFailed: "문자 메시지를 보낼 수 없습니다",
     todayLabel: "오늘",
     deleteBtn: "삭제",
     medDeletedToast: "약이 삭제되었습니다",
@@ -935,6 +945,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "Принято",
     testShortBtn: "Тест",
     testSentToast: "Тестовое напоминание отправлено",
+    smsDeliveryFailed: "Не удалось отправить SMS",
     todayLabel: "Сегодня",
     deleteBtn: "Удалить",
     medDeletedToast: "Лекарство удалено",
@@ -1020,6 +1031,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     takenShortBadge: "ली गई",
     testShortBtn: "जाँच",
     testSentToast: "जाँच रिमाइंडर भेजा गया",
+    smsDeliveryFailed: "टेक्स्ट संदेश नहीं भेजा जा सका",
     todayLabel: "आज",
     deleteBtn: "हटाएँ",
     medDeletedToast: "दवा हटा दी गई",

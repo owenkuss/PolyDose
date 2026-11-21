@@ -96,6 +96,14 @@ export function isValidPhoneNumber(phone: string): boolean {
   return digits.length >= 7 && digits.length <= 15;
 }
 
+export function normalizePhoneForSms(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  return `+${digits}`;
+}
+
 export function formatTime12h(time24: string): string {
   const parts = time24.split(":");
   const hourNum = Number(parts[0] ?? 8);

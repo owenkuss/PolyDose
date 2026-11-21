@@ -11,6 +11,7 @@ import {
   getMedicationTimes,
   isTakenToday,
   isValidPhoneNumber,
+  normalizePhoneForSms,
   normalizeReminderTimes,
   sanitizeTimeDigits,
   suggestNextReminderTime,
@@ -113,6 +114,14 @@ describe("DoseBridge i18n and SMS rules", () => {
     expect(formatTime12h("21:30")).toBe("09:30 PM");
     expect(formatTimeCompact12h("08:00")).toBe("8:00 AM");
     expect(formatTimeCompact12h("21:30")).toBe("9:30 PM");
+  });
+
+  it("normalizes phone numbers to E.164 for SMS delivery", () => {
+    expect(normalizePhoneForSms("+1 (555) 234-5678")).toBe("+15552345678");
+    expect(normalizePhoneForSms("(555) 234-5678")).toBe("+15552345678");
+    expect(normalizePhoneForSms("5552345678")).toBe("+15552345678");
+    expect(normalizePhoneForSms("+44 20 7946 0958")).toBe("+442079460958");
+    expect(normalizePhoneForSms("")).toBe("");
   });
 
   it("filters medications by day sorted chronologically and counts only active medications per day", () => {
