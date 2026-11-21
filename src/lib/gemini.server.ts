@@ -13,6 +13,15 @@ export const GEMINI_MULTIMODAL_MODELS = [
   "gemini-3.5-flash-lite",
 ] as const;
 
+// The app's brand name. Reminder text must never carry an older name.
+const APP_BRAND_NAME = "PolyDose";
+const LEGACY_BRAND_PATTERN = /(?:dose[\s_-]?bridge|pillping)/gi;
+
+/** Rewrites any older app name in generated message text to the current one. */
+export function enforceAppBrand(text: string): string {
+  return text.replace(LEGACY_BRAND_PATTERN, APP_BRAND_NAME);
+}
+
 export interface GeminiGroundingSource {
   title: string;
   uri: string;
@@ -128,6 +137,7 @@ export async function generateSmsReminderText(input: {
                 text: [
                   `Write one short, warm SMS medication reminder in ${langName} (language code: ${input.language}).`,
                   "Keep it strictly under 145 characters, plain text only, no quotes, no emojis, no reply instructions.",
+                  'If you mention the app sending the reminder, call it exactly "PolyDose".',
                   `Medication: ${input.name}`,
                   `Dosage: ${input.dosage}`,
                   input.instructions ? `Instructions: ${input.instructions}` : "",
@@ -142,7 +152,7 @@ export async function generateSmsReminderText(input: {
       },
     });
 
-    const cleaned = text.replace(/\s+/g, " ").trim();
+    const cleaned = enforceAppBrand(text.replace(/\s+/g, " ").trim());
     if (cleaned.length > 0 && cleaned.length < 150) {
       return cleaned;
     }

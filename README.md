@@ -1,6 +1,6 @@
-# DoseBridge Care
+# PolyDose
 
-Build a clean, accessible, single-page web app called "DoseBridge" — a multilingual medication reminder dashboard designed for patients and caregivers.
+A clean, accessible, single-page web app called "PolyDose" — a multilingual medication reminder dashboard designed for patients and caregivers.
 
 Design & Aesthetic:
 - Calm, modern healthcare UI: crisp white background, soft slate cards, deep teal primary accents, high-contrast typography, and large touch-friendly buttons suitable for elderly users.

@@ -24,7 +24,7 @@ import {
   parseRxTermsResponse,
 } from "@/lib/medication-search";
 
-describe("DoseBridge i18n and SMS rules", () => {
+describe("PolyDose i18n and SMS rules", () => {
   it("supports the top 10 U.S. languages plus Haitian Creole with 7 day names", () => {
     expect(LANGUAGES.map((l) => l.code)).toEqual([
       "en",

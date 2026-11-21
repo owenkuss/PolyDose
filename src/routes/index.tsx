@@ -49,7 +49,9 @@ import {
 import { generateSmsReminder } from "@/lib/gemini-reminders.functions";
 import { sendReminderSms } from "@/lib/sms.functions";
 
-const PHONE_STORAGE_KEY = "dosebridge_phone";
+const PHONE_STORAGE_KEY = "polydose_phone";
+// Older builds saved the phone number under the previous app name; keep reading it.
+const LEGACY_PHONE_STORAGE_KEY = "dosebridge_phone";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -97,7 +99,9 @@ function DoseBridgePage() {
 
     async function init() {
       try {
-        const savedPhone = window.localStorage.getItem(PHONE_STORAGE_KEY);
+        const savedPhone =
+          window.localStorage.getItem(PHONE_STORAGE_KEY) ??
+          window.localStorage.getItem(LEGACY_PHONE_STORAGE_KEY);
         let found: PatientRow | null = null;
         if (savedPhone) {
           found = await loadPatientByPhone(savedPhone);
@@ -121,7 +125,7 @@ function DoseBridgePage() {
           setTimezone(browserTz);
         }
       } catch (err) {
-        console.error("Failed to load DoseBridge data:", err);
+        console.error("Failed to load PolyDose data:", err);
       }
     }
 
