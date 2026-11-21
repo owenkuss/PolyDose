@@ -206,7 +206,7 @@ export function AddMedicationDialog({
           // Opening the edit panel should not jump into the name field and highlight its text.
           if (editing) e.preventDefault();
         }}
-        className="max-h-[90vh] overflow-y-auto rounded-2xl border-border bg-popover sm:max-w-lg"
+        className="max-h-[90vh] max-h-[90dvh] overflow-y-auto overscroll-contain rounded-2xl border-border bg-popover sm:max-w-lg"
       >
         <DialogHeader>
           <div className="flex items-center gap-2">
