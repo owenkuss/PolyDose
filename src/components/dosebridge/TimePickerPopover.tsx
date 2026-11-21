@@ -58,13 +58,6 @@ export function TimePickerPopover({ id, value, onChange, t }: TimePickerPopoverP
     setPeriod(periodOf(value));
   }
 
-  const presets: { label: string; time: string }[] = [
-    { label: t.timePresetMorning, time: "08:00" },
-    { label: t.timePresetNoon, time: "12:00" },
-    { label: t.timePresetEvening, time: "18:00" },
-    { label: t.timePresetBedtime, time: "21:00" },
-  ];
-
   const hintId = id ? `${id}-hint` : undefined;
 
   return (
@@ -120,27 +113,6 @@ export function TimePickerPopover({ id, value, onChange, t }: TimePickerPopoverP
           {t.timeInputHint}
         </p>
       )}
-
-      <div className="grid grid-cols-4 gap-1.5">
-        {presets.map((preset) => (
-          <button
-            key={preset.time}
-            type="button"
-            onClick={() => {
-              editingRef.current = false;
-              onChange(preset.time);
-            }}
-            aria-pressed={value === preset.time}
-            className={`min-h-9 rounded-lg border px-1 text-xs font-bold transition-colors ${
-              value === preset.time
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-foreground hover:border-primary hover:bg-accent"
-            }`}
-          >
-            {preset.label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
