@@ -8,9 +8,12 @@ import {
   formatTimeForInput,
   getDueScheduledKey,
   getMedicationsForDay,
+  getMedicationTimes,
   isTakenToday,
   isValidPhoneNumber,
+  normalizeReminderTimes,
   sanitizeTimeDigits,
+  suggestNextReminderTime,
   typedTimeTo24,
 } from "@/lib/dosebridge-utils";
 import {
@@ -192,6 +195,36 @@ describe("Typed time input", () => {
   it("gives every language a time-entry hint", () => {
     for (const lang of LANGUAGES) {
       expect(TRANSLATIONS[lang.code].timeInputHint.length).toBeGreaterThan(0);
+      expect(TRANSLATIONS[lang.code].addAnotherTimeBtn.length).toBeGreaterThan(0);
+      expect(TRANSLATIONS[lang.code].removeTimeLabel.length).toBeGreaterThan(0);
     }
+  });
+
+  it("normalizes, suggests, and triggers multiple reminder times per medication", () => {
+    expect(normalizeReminderTimes(["20:00", "08:00", "12:00", "08:00", "bad"])).toEqual([
+      "08:00",
+      "12:00",
+      "20:00",
+    ]);
+    expect(suggestNextReminderTime(["08:00"])).toBe("12:00");
+    expect(suggestNextReminderTime(["08:00", "12:00"])).toBe("16:00");
+    expect(
+      getMedicationTimes({
+        reminder_time: "08:00",
+        reminder_times: ["16:00", "08:00", "12:00"],
+      }),
+    ).toEqual(["08:00", "12:00", "16:00"]);
+
+    const med = {
+      is_active: true,
+      days_of_week: [0, 1, 2, 3, 4, 5, 6],
+      reminder_time: "08:00",
+      reminder_times: ["08:00", "12:00", "16:00", "20:00"],
+      last_sent_at: "2026-11-21T13:00:10Z", // 08:00 AM EST already sent
+    };
+    // 17:00Z = 12:00 PM EST — should trigger the 12:00 reminder even though 08:00 was sent.
+    expect(
+      getDueScheduledKey(med, "America/New_York", new Date("2026-11-21T17:00:00Z"), 1),
+    ).toBe("2026-11-21 12:00");
   });
 });

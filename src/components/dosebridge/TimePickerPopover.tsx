@@ -13,6 +13,7 @@ interface TimePickerPopoverProps {
   value: string; // "HH:MM" 24-hour
   onChange: (time24: string) => void;
   t: TranslationDict;
+  showHint?: boolean;
 }
 
 function periodOf(time24: string): "AM" | "PM" {
@@ -23,7 +24,13 @@ function periodOf(time24: string): "AM" | "PM" {
  * Time field the person fills in by hand: type the time, then tap AM or PM.
  * The value stays the stored 24-hour "HH:MM" string.
  */
-export function TimePickerPopover({ id, value, onChange, t }: TimePickerPopoverProps) {
+export function TimePickerPopover({
+  id,
+  value,
+  onChange,
+  t,
+  showHint = true,
+}: TimePickerPopoverProps) {
   const [digits, setDigits] = useState(() => sanitizeTimeDigits(formatTimeForInput(value)));
   const [period, setPeriod] = useState<"AM" | "PM">(() => periodOf(value));
   const editingRef = useRef(false);
@@ -58,7 +65,7 @@ export function TimePickerPopover({ id, value, onChange, t }: TimePickerPopoverP
     setPeriod(periodOf(value));
   }
 
-  const hintId = id ? `${id}-hint` : undefined;
+  const hintId = showHint && id ? `${id}-hint` : undefined;
 
   return (
     <div className="space-y-2">

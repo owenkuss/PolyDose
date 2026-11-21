@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { normalizeReminderTimes } from "@/lib/dosebridge-utils";
 import type { LanguageCode } from "@/lib/i18n";
 
 export type PatientRow = Tables<"patients">;
@@ -78,8 +79,9 @@ export async function createMedication(input: {
   dosage: string;
   instructions: string;
   daysOfWeek: number[];
-  reminderTime: string;
+  reminderTimes: string[];
 }): Promise<MedicationRow> {
+  const times = normalizeReminderTimes(input.reminderTimes);
   const { data, error } = await supabase
     .from("medications")
     .insert({
@@ -88,7 +90,8 @@ export async function createMedication(input: {
       dosage: input.dosage.trim(),
       instructions: input.instructions.trim(),
       days_of_week: [...input.daysOfWeek].sort((a, b) => a - b),
-      reminder_time: input.reminderTime,
+      reminder_time: times[0] ?? "08:00",
+      reminder_times: times,
       is_active: true,
     })
     .select("*")
@@ -118,9 +121,10 @@ export async function updateMedication(
     dosage: string;
     instructions: string;
     daysOfWeek: number[];
-    reminderTime: string;
+    reminderTimes: string[];
   },
 ): Promise<MedicationRow> {
+  const times = normalizeReminderTimes(input.reminderTimes);
   const { data, error } = await supabase
     .from("medications")
     .update({
@@ -128,7 +132,8 @@ export async function updateMedication(
       dosage: input.dosage.trim(),
       instructions: input.instructions.trim(),
       days_of_week: [...input.daysOfWeek].sort((a, b) => a - b),
-      reminder_time: input.reminderTime,
+      reminder_time: times[0] ?? "08:00",
+      reminder_times: times,
     })
     .eq("id", medicationId)
     .select("*")

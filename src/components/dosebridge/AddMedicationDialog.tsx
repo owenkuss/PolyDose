@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Camera, Check, FileText, Loader2, Pencil, Plus, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Camera, Check, FileText, Loader2, Plus, Sparkles, TriangleAlert, X } from "lucide-react";
 import { MedicationAutocomplete } from "@/components/dosebridge/MedicationAutocomplete";
 import { TimePickerPopover } from "@/components/dosebridge/TimePickerPopover";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { MedicationRow } from "@/lib/dosebridge-api";
+import {
+  getMedicationTimes,
+  normalizeReminderTimes,
+  suggestNextReminderTime,
+} from "@/lib/dosebridge-utils";
 import { parseMedicationPhoto } from "@/lib/photo-parse.functions";
 import type { TranslationDict } from "@/lib/i18n";
 import type { MedicationSuggestion } from "@/lib/medication-search";
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+const MAX_REMINDER_TIMES = 8;
 type EntryMode = "choose" | "text" | "photo";
 
 interface AddMedicationDialogProps {
@@ -31,7 +37,7 @@ interface AddMedicationDialogProps {
     dosage: string;
     instructions: string;
     daysOfWeek: number[];
-    reminderTime: string;
+    reminderTimes: string[];
   }) => Promise<boolean>;
   onUpdate?: (
     medicationId: string,
@@ -40,7 +46,7 @@ interface AddMedicationDialogProps {
       dosage: string;
       instructions: string;
       daysOfWeek: number[];
-      reminderTime: string;
+      reminderTimes: string[];
     },
   ) => Promise<boolean>;
 }
@@ -60,7 +66,7 @@ export function AddMedicationDialog({
   const [suggestedStrengths, setSuggestedStrengths] = useState<string[]>([]);
   const [instructions, setInstructions] = useState("");
   const [days, setDays] = useState<number[]>(ALL_DAYS);
-  const [reminderTime, setReminderTime] = useState("08:00");
+  const [reminderTimes, setReminderTimes] = useState<string[]>(["08:00"]);
   const [error, setError] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoName, setPhotoName] = useState<string>("");
@@ -89,7 +95,7 @@ export function AddMedicationDialog({
           ? [...editing.days_of_week].sort((a, b) => a - b)
           : ALL_DAYS,
       );
-      setReminderTime(editing.reminder_time || "08:00");
+      setReminderTimes(getMedicationTimes(editing));
       setError(null);
     } else {
       resetAll();
@@ -104,7 +110,7 @@ export function AddMedicationDialog({
     setSuggestedStrengths([]);
     setInstructions("");
     setDays(ALL_DAYS);
-    setReminderTime("08:00");
+    setReminderTimes(["08:00"]);
     setError(null);
     if (photoUrl) URL.revokeObjectURL(photoUrl);
     setPhotoUrl(null);
@@ -140,13 +146,21 @@ export function AddMedicationDialog({
         const parsed = await parseMedicationPhoto({
           data: { imageBase64: base64, mimeType: file.type || "image/jpeg" },
         });
-        if (!parsed.name && !parsed.dosage && !parsed.instructions) {
+        if (
+          !parsed.name &&
+          !parsed.dosage &&
+          !parsed.instructions &&
+          parsed.reminderTimes.length === 0
+        ) {
           setParseError(true);
           return;
         }
         if (parsed.name) setName(parsed.name);
         if (parsed.dosage) setDosage(parsed.dosage);
         if (parsed.instructions) setInstructions(parsed.instructions);
+        if (parsed.reminderTimes.length > 0) {
+          setReminderTimes(normalizeReminderTimes(parsed.reminderTimes));
+        }
         setPrefilled(true);
         setMode("text");
       } catch {
@@ -176,7 +190,7 @@ export function AddMedicationDialog({
       dosage: dosage.trim(),
       instructions: instructions.trim(),
       daysOfWeek: days,
-      reminderTime: reminderTime || "08:00",
+      reminderTimes: normalizeReminderTimes(reminderTimes),
     };
     const ok =
       editing && onUpdate ? await onUpdate(editing.id, payload) : await onAdd(payload);
@@ -469,11 +483,60 @@ export function AddMedicationDialog({
               </div>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label htmlFor="med-time" className="text-sm font-bold">
                 {t.timeLabel}
               </Label>
-              <TimePickerPopover id="med-time" value={reminderTime} onChange={setReminderTime} t={t} />
+              <div className="space-y-2">
+                {reminderTimes.map((time, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <TimePickerPopover
+                        id={idx === 0 ? "med-time" : `med-time-${idx}`}
+                        value={time}
+                        onChange={(next) =>
+                          setReminderTimes((prev) =>
+                            prev.map((item, i) => (i === idx ? next : item)),
+                          )
+                        }
+                        t={t}
+                        showHint={false}
+                      />
+                    </div>
+                    {reminderTimes.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          setReminderTimes((prev) => prev.filter((_, i) => i !== idx))
+                        }
+                        aria-label={t.removeTimeLabel}
+                        className="h-11 w-11 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-medium text-muted-foreground">{t.timeInputHint}</p>
+                {reminderTimes.length < MAX_REMINDER_TIMES && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setReminderTimes((prev) => [...prev, suggestNextReminderTime(prev)])
+                    }
+                    className="h-8 gap-1 rounded-lg px-2.5 text-xs font-bold"
+                  >
+                    <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t.addAnotherTimeBtn}
+                  </Button>
+                )}
+              </div>
             </div>
 
             {error && (

@@ -37,6 +37,7 @@ import {
   detectBrowserTimezone,
   getDueScheduledKey,
   getLocalDateParts,
+  getMedicationTimes,
   isValidPhoneNumber,
 } from "@/lib/dosebridge-utils";
 import {
@@ -228,7 +229,7 @@ function DoseBridgePage() {
     dosage: string;
     instructions: string;
     daysOfWeek: number[];
-    reminderTime: string;
+    reminderTimes: string[];
   }): Promise<boolean> {
     if (!isValidPhoneNumber(phoneInput)) {
       toast.error(t.invalidPhoneError);
@@ -274,7 +275,7 @@ function DoseBridgePage() {
       dosage: string;
       instructions: string;
       daysOfWeek: number[];
-      reminderTime: string;
+      reminderTimes: string[];
     },
   ): Promise<boolean> {
     setIsAddingMed(true);
@@ -362,7 +363,11 @@ function DoseBridgePage() {
       .filter((med) =>
         statusFilter === "all" ? true : statusFilter === "active" ? med.is_active : !med.is_active,
       )
-      .sort((a, b) => a.reminder_time.localeCompare(b.reminder_time));
+      .sort((a, b) => {
+        const firstA = getMedicationTimes(a)[0] ?? a.reminder_time;
+        const firstB = getMedicationTimes(b)[0] ?? b.reminder_time;
+        return firstA.localeCompare(firstB);
+      });
   }, [medications, selectedDay, statusFilter]);
 
   const isFiltered = selectedDay !== null || statusFilter !== "all";

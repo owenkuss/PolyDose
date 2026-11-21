@@ -16,6 +16,7 @@ const savedMed: MedicationRow = {
   instructions: "Take with food",
   days_of_week: [1, 3, 5],
   reminder_time: "20:30",
+  reminder_times: ["20:30"],
   is_active: true,
   last_sent_at: null,
   last_confirmed_at: null,
@@ -74,9 +75,43 @@ describe("Editing a saved medication", () => {
       dosage: "500mg — 1 tablet",
       instructions: "Take with food",
       daysOfWeek: [1, 3, 5],
-      reminderTime: "20:30",
+      reminderTimes: ["20:30"],
     });
     expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  it("lets the user add and remove multiple reminder times", async () => {
+    const onUpdate = vi.fn().mockResolvedValue(true);
+    const multiMed: MedicationRow = {
+      ...savedMed,
+      reminder_time: "08:00",
+      reminder_times: ["08:00"],
+    };
+
+    render(
+      <AddMedicationDialog
+        open
+        onOpenChange={() => {}}
+        t={t}
+        isSubmitting={false}
+        editing={multiMed}
+        onAdd={vi.fn()}
+        onUpdate={onUpdate}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Add another time" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add another time" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledTimes(1));
+    expect(onUpdate).toHaveBeenCalledWith("med-1", {
+      name: "Metformin",
+      dosage: "500mg — 1 tablet",
+      instructions: "Take with food",
+      daysOfWeek: [1, 3, 5],
+      reminderTimes: ["08:00", "12:00", "16:00"],
+    });
   });
 
   it("shows an Edit button on each listed medication that opens that medication", () => {

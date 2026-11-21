@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/public/jobs/send-reminders")({
         const { data: meds, error } = await supabaseAdmin
           .from("medications")
           .select(
-            "id, patient_id, name, dosage, instructions, days_of_week, reminder_time, is_active, last_sent_at, patients(language, timezone)",
+            "id, patient_id, name, dosage, instructions, days_of_week, reminder_time, reminder_times, is_active, last_sent_at, patients(language, timezone)",
           )
           .eq("is_active", true);
 

@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { MedicationRow } from "@/lib/dosebridge-api";
-import { formatTimeCompact12h, isTakenToday } from "@/lib/dosebridge-utils";
+import { formatTimeCompact12h, getMedicationTimes, isTakenToday } from "@/lib/dosebridge-utils";
 import type { TranslationDict } from "@/lib/i18n";
 
 interface MedicationListProps {
@@ -47,6 +47,7 @@ export function MedicationList({
           <div className="space-y-2">
             {medications.map((med) => {
               const takenToday = isTakenToday(med.last_confirmed_at, timezone);
+              const times = getMedicationTimes(med);
               return (
                 <div
                   key={med.id}
@@ -55,27 +56,62 @@ export function MedicationList({
                   }`}
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                    <span className="shrink-0 rounded-md bg-background px-2.5 py-1 text-xs font-bold text-foreground tabular-nums ring-1 ring-border">
-                      {formatTimeCompact12h(med.reminder_time)}
-                    </span>
-                    <div className="flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden">
-                      <h3 className="truncate text-sm font-bold text-foreground">{med.name}</h3>
-                      <span className="shrink-0 truncate text-xs font-medium text-muted-foreground">
-                        {med.dosage}
-                      </span>
-                      {med.instructions && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="hidden min-w-0 truncate text-xs text-muted-foreground md:inline">
-                              · {med.instructions}
+                    {times.length === 1 ? (
+                      <>
+                        <span className="shrink-0 rounded-md bg-background px-2.5 py-1 text-xs font-bold text-foreground tabular-nums ring-1 ring-border">
+                          {formatTimeCompact12h(times[0] ?? med.reminder_time)}
+                        </span>
+                        <div className="flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden">
+                          <h3 className="truncate text-sm font-bold text-foreground">{med.name}</h3>
+                          <span className="shrink-0 truncate text-xs font-medium text-muted-foreground">
+                            {med.dosage}
+                          </span>
+                          {med.instructions && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="hidden min-w-0 truncate text-xs text-muted-foreground md:inline">
+                                  · {med.instructions}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs text-xs">
+                                {med.instructions}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                        <div className="flex min-w-0 items-baseline gap-2 overflow-hidden">
+                          <h3 className="truncate text-sm font-bold text-foreground">{med.name}</h3>
+                          <span className="shrink-0 truncate text-xs font-medium text-muted-foreground">
+                            {med.dosage}
+                          </span>
+                          {med.instructions && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="hidden min-w-0 truncate text-xs text-muted-foreground md:inline">
+                                  · {med.instructions}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs text-xs">
+                                {med.instructions}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {times.map((time) => (
+                            <span
+                              key={time}
+                              className="rounded-md bg-background px-2 py-0.5 text-xs font-bold text-foreground tabular-nums ring-1 ring-border"
+                            >
+                              {formatTimeCompact12h(time)}
                             </span>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-xs text-xs">
-                            {med.instructions}
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex shrink-0 items-center justify-end gap-2">

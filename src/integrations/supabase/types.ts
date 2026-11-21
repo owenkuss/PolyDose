@@ -27,6 +27,7 @@ export type Database = {
           name: string
           patient_id: string
           reminder_time: string
+          reminder_times: string[]
         }
         Insert: {
           created_at?: string
@@ -40,6 +41,7 @@ export type Database = {
           name: string
           patient_id: string
           reminder_time?: string
+          reminder_times?: string[]
         }
         Update: {
           created_at?: string
@@ -53,6 +55,7 @@ export type Database = {
           name?: string
           patient_id?: string
           reminder_time?: string
+          reminder_times?: string[]
         }
         Relationships: [
           {

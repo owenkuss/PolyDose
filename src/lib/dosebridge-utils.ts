@@ -1,5 +1,60 @@
 export const DEFAULT_DEMO_PHONE = "+1 (555) 234-5678";
 
+const TIME_24_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+const FALLBACK_TIME_SLOTS = [
+  "08:00",
+  "12:00",
+  "16:00",
+  "20:00",
+  "10:00",
+  "14:00",
+  "18:00",
+  "22:00",
+] as const;
+
+/** Clean, deduplicate, and sort a list of 24-hour "HH:MM" reminder times. */
+export function normalizeReminderTimes(
+  times: readonly string[] | null | undefined,
+  fallback = "08:00",
+): string[] {
+  const valid = new Set<string>();
+  for (const raw of times ?? []) {
+    const trimmed = raw.trim();
+    if (TIME_24_PATTERN.test(trimmed)) {
+      valid.add(trimmed);
+    }
+  }
+  if (valid.size === 0) {
+    return [TIME_24_PATTERN.test(fallback) ? fallback : "08:00"];
+  }
+  return [...valid].sort((a, b) => a.localeCompare(b));
+}
+
+/** Return all scheduled 24-hour times for a medication, sorted chronologically. */
+export function getMedicationTimes(med: {
+  reminder_time: string;
+  reminder_times?: readonly string[] | null;
+}): string[] {
+  if (med.reminder_times && med.reminder_times.length > 0) {
+    return normalizeReminderTimes(med.reminder_times, med.reminder_time || "08:00");
+  }
+  return normalizeReminderTimes([med.reminder_time || "08:00"]);
+}
+
+/** Pick a sensible next time (+4 hours from the last entry) when adding another reminder slot. */
+export function suggestNextReminderTime(existing: readonly string[]): string {
+  const normalized = normalizeReminderTimes(existing);
+  const last = normalized[normalized.length - 1] ?? "08:00";
+  const [hStr, mStr] = last.split(":");
+  const nextHour = (Number(hStr) + 4) % 24;
+  const candidate = `${String(nextHour).padStart(2, "0")}:${String(Number(mStr) || 0).padStart(2, "0")}`;
+  if (!normalized.includes(candidate)) return candidate;
+  for (const slot of FALLBACK_TIME_SLOTS) {
+    if (!normalized.includes(slot)) return slot;
+  }
+  return "12:00";
+}
+
 export const COMMON_MEDICATIONS = [
   { name: "Metformin", dosage: "500mg — 1 tablet", instructions: "Take with food" },
   { name: "Lisinopril", dosage: "10mg — 1 tablet", instructions: "Take in the morning" },
@@ -142,11 +197,15 @@ export function isTakenToday(
 }
 
 export function getMedicationsForDay<
-  T extends { days_of_week: number[]; reminder_time: string },
+  T extends { days_of_week: number[]; reminder_time: string; reminder_times?: readonly string[] | null },
 >(medications: readonly T[], dayIndex: number): T[] {
   return medications
     .filter((med) => med.days_of_week.includes(dayIndex))
-    .sort((a, b) => a.reminder_time.localeCompare(b.reminder_time));
+    .sort((a, b) => {
+      const firstA = getMedicationTimes(a)[0] ?? a.reminder_time;
+      const firstB = getMedicationTimes(b)[0] ?? b.reminder_time;
+      return firstA.localeCompare(firstB);
+    });
 }
 
 export function countActiveMedicationsByDay(
@@ -242,6 +301,7 @@ export function getDueScheduledKey(
     is_active: boolean;
     days_of_week: number[];
     reminder_time: string;
+    reminder_times?: readonly string[] | null;
     last_sent_at?: string | null;
   },
   timezone: string,
@@ -249,28 +309,35 @@ export function getDueScheduledKey(
   windowMinutes = 1,
 ): string | null {
   if (!med.is_active || med.days_of_week.length === 0) return null;
-  const [hStr, mStr] = med.reminder_time.split(":");
-  const schedHour = Number(hStr);
-  const schedMin = Number(mStr);
-  if (Number.isNaN(schedHour) || Number.isNaN(schedMin)) return null;
 
   const localNow = getLocalDateParts(now, timezone);
   if (!med.days_of_week.includes(localNow.weekday)) return null;
 
-  const schedMins = schedHour * 60 + schedMin;
-  if (localNow.minutesOfDay < schedMins || localNow.minutesOfDay >= schedMins + windowMinutes) {
-    return null;
-  }
-
+  let localSent: LocalDateParts | null = null;
   if (med.last_sent_at) {
     const sentDate = new Date(med.last_sent_at);
     if (!Number.isNaN(sentDate.getTime())) {
-      const localSent = getLocalDateParts(sentDate, timezone);
-      if (localSent.dateKey === localNow.dateKey && localSent.minutesOfDay >= schedMins) {
-        return null;
-      }
+      localSent = getLocalDateParts(sentDate, timezone);
     }
   }
 
-  return `${localNow.dateKey} ${med.reminder_time}`;
+  for (const time of getMedicationTimes(med)) {
+    const [hStr, mStr] = time.split(":");
+    const schedHour = Number(hStr);
+    const schedMin = Number(mStr);
+    if (Number.isNaN(schedHour) || Number.isNaN(schedMin)) continue;
+
+    const schedMins = schedHour * 60 + schedMin;
+    if (localNow.minutesOfDay < schedMins || localNow.minutesOfDay >= schedMins + windowMinutes) {
+      continue;
+    }
+
+    if (localSent && localSent.dateKey === localNow.dateKey && localSent.minutesOfDay >= schedMins) {
+      continue;
+    }
+
+    return `${localNow.dateKey} ${time}`;
+  }
+
+  return null;
 }
