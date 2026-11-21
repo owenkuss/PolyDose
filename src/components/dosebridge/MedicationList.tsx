@@ -49,7 +49,7 @@ export function MedicationList({
               const takenToday = isTakenToday(med.last_confirmed_at, timezone);
               const times = getMedicationTimes(med);
               const detailsLine = (
-                <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5 sm:flex-nowrap">
+                <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5 lg:flex-nowrap">
                   <h3 className="shrink-0 text-sm font-bold text-foreground">{med.name}</h3>
                   <span className="shrink-0 text-xs font-medium text-muted-foreground">
                     {med.dosage}
@@ -71,7 +71,7 @@ export function MedicationList({
               return (
                 <div
                   key={med.id}
-                  className={`flex min-h-14 flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 transition-colors hover:border-primary/50 sm:flex-row sm:items-center sm:justify-between ${
+                  className={`flex min-h-14 flex-col gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 transition-colors hover:border-primary/50 lg:flex-row lg:items-center lg:justify-between ${
                     !med.is_active ? "opacity-60" : ""
                   }`}
                 >
