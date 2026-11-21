@@ -50,6 +50,13 @@
       "when": 1795293093453,
       "tag": "0006_rename_legacy_brand_in_reminder_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795293259155,
+      "tag": "0007_enforce_canonical_patient_phone",
+      "breakpoints": true
     }
   ]
 }
