@@ -72,6 +72,24 @@ export interface TranslationDict {
   noMedPreview: string;
   daysShort: readonly [string, string, string, string, string, string, string];
   smsPrefix: string;
+  phoneShortLabel: string;
+  addNewBtn: string;
+  filterBtn: string;
+  filterAllDays: string;
+  filterStatusLabel: string;
+  filterStatusAll: string;
+  filterReset: string;
+  addMethodSubtitle: string;
+  addByTextTitle: string;
+  addByTextDesc: string;
+  addByPhotoTitle: string;
+  addByPhotoDesc: string;
+  photoCaptureHint: string;
+  photoSelectBtn: string;
+  photoRetakeBtn: string;
+  photoGeminiPending: string;
+  backToOptions: string;
+  switchToTextBtn: string;
 }
 
 export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
@@ -132,6 +150,24 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     noMedPreview: "Add a medication to preview your translated SMS reminder.",
     daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     smsPrefix: "DoseBridge: Time for",
+    phoneShortLabel: "Phone #",
+    addNewBtn: "Add new",
+    filterBtn: "Filter",
+    filterAllDays: "All days",
+    filterStatusLabel: "Status",
+    filterStatusAll: "All",
+    filterReset: "Reset",
+    addMethodSubtitle: "Choose how you would like to add a medication.",
+    addByTextTitle: "Text fill in",
+    addByTextDesc: "Type the medication name, dosage, and reminder schedule.",
+    addByPhotoTitle: "Take photo",
+    addByPhotoDesc: "Capture a prescription label photo for Gemini text parsing.",
+    photoCaptureHint: "Take or upload a clear photo of the prescription bottle or label.",
+    photoSelectBtn: "Take photo / Choose image",
+    photoRetakeBtn: "Choose another photo",
+    photoGeminiPending: "Photo captured — Gemini API label parsing will be connected here next.",
+    backToOptions: "Back",
+    switchToTextBtn: "Fill in by text instead",
   },
   es: {
     tagline: "Recordatorios de Medicinas en Tu Idioma",
@@ -190,6 +226,24 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     noMedPreview: "Agrega una medicina para ver el mensaje traducido.",
     daysShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"],
     smsPrefix: "DoseBridge: Hora de",
+    phoneShortLabel: "Teléfono #",
+    addNewBtn: "Agregar",
+    filterBtn: "Filtrar",
+    filterAllDays: "Todos los días",
+    filterStatusLabel: "Estado",
+    filterStatusAll: "Todos",
+    filterReset: "Restablecer",
+    addMethodSubtitle: "Elige cómo deseas agregar una medicina.",
+    addByTextTitle: "Escribir datos",
+    addByTextDesc: "Ingresa el nombre, la dosis y el horario manualmente.",
+    addByPhotoTitle: "Tomar foto",
+    addByPhotoDesc: "Captura la etiqueta para leerla luego con Gemini.",
+    photoCaptureHint: "Toma o sube una foto clara del frasco o etiqueta.",
+    photoSelectBtn: "Tomar foto / Elegir imagen",
+    photoRetakeBtn: "Elegir otra foto",
+    photoGeminiPending: "Foto lista — el análisis de texto con Gemini API se conectará aquí.",
+    backToOptions: "Volver",
+    switchToTextBtn: "Escribir datos en su lugar",
   },
   zh: {
     tagline: "多语言服药提醒助手",
@@ -248,6 +302,24 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     noMedPreview: "添加药物后即可预览对应语言的短信提醒。",
     daysShort: ["周日", "周一", "周二", "周三", "周四", "周五", "周六"],
     smsPrefix: "DoseBridge提醒：请服用",
+    phoneShortLabel: "手机号",
+    addNewBtn: "新增",
+    filterBtn: "筛选",
+    filterAllDays: "全部日期",
+    filterStatusLabel: "状态",
+    filterStatusAll: "全部",
+    filterReset: "重置",
+    addMethodSubtitle: "请选择添加药物的方式。",
+    addByTextTitle: "手动填写",
+    addByTextDesc: "输入药物名称、剂量和提醒时间。",
+    addByPhotoTitle: "拍照识别",
+    addByPhotoDesc: "拍摄药瓶标签，后续通过 Gemini 解析文字。",
+    photoCaptureHint: "拍摄或上传清晰的处方标签照片。",
+    photoSelectBtn: "拍照 / 选择图片",
+    photoRetakeBtn: "重新选择照片",
+    photoGeminiPending: "照片已准备就绪 — 后续将接入 Gemini API 解析标签文字。",
+    backToOptions: "返回",
+    switchToTextBtn: "改为手动填写",
   },
   fr: {
     tagline: "Rappels de Médicaments Multilingues",
@@ -306,6 +378,24 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     noMedPreview: "Ajoutez un médicament pour voir l'aperçu du SMS.",
     daysShort: ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
     smsPrefix: "DoseBridge : Prenez",
+    phoneShortLabel: "Téléphone #",
+    addNewBtn: "Ajouter",
+    filterBtn: "Filtrer",
+    filterAllDays: "Tous les jours",
+    filterStatusLabel: "Statut",
+    filterStatusAll: "Tous",
+    filterReset: "Réinitialiser",
+    addMethodSubtitle: "Choisissez comment ajouter votre médicament.",
+    addByTextTitle: "Saisie texte",
+    addByTextDesc: "Saisissez le nom, la dose et l'horaire manuellement.",
+    addByPhotoTitle: "Prendre une photo",
+    addByPhotoDesc: "Photographiez l'étiquette pour l'analyse Gemini.",
+    photoCaptureHint: "Prenez ou importez une photo nette de l'étiquette.",
+    photoSelectBtn: "Prendre une photo / Choisir",
+    photoRetakeBtn: "Choisir une autre photo",
+    photoGeminiPending: "Photo prête — l'analyse par l'API Gemini sera connectée ici.",
+    backToOptions: "Retour",
+    switchToTextBtn: "Saisir par texte",
   },
   vi: {
     tagline: "Nhắc Uống Thuốc Đa Ngôn Ngữ",
@@ -364,6 +454,24 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     noMedPreview: "Thêm một loại thuốc để xem trước tin nhắn nhắc nhở.",
     daysShort: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
     smsPrefix: "DoseBridge: Đến giờ uống",
+    phoneShortLabel: "Số ĐT #",
+    addNewBtn: "Thêm mới",
+    filterBtn: "Lọc",
+    filterAllDays: "Tất cả ngày",
+    filterStatusLabel: "Trạng thái",
+    filterStatusAll: "Tất cả",
+    filterReset: "Đặt lại",
+    addMethodSubtitle: "Chọn cách bạn muốn thêm thuốc mới.",
+    addByTextTitle: "Nhập chữ",
+    addByTextDesc: "Nhập tên thuốc, liều dùng và lịch nhắc thủ công.",
+    addByPhotoTitle: "Chụp ảnh",
+    addByPhotoDesc: "Chụp nhãn thuốc để phân tích bằng Gemini sau.",
+    photoCaptureHint: "Chụp hoặc tải lên ảnh rõ nét của nhãn lọ thuốc.",
+    photoSelectBtn: "Chụp ảnh / Chọn ảnh",
+    photoRetakeBtn: "Chọn ảnh khác",
+    photoGeminiPending: "Đã lưu ảnh — tính năng đọc nhãn bằng Gemini API sẽ kết nối tại đây.",
+    backToOptions: "Quay lại",
+    switchToTextBtn: "Chuyển sang nhập chữ",
   },
   ht: {
     tagline: "Rapèl Medikaman nan Lang Ou",
@@ -422,6 +530,24 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     noMedPreview: "Ajoute yon medikaman pou wè apèsi SMS la.",
     daysShort: ["Dim", "Len", "Mad", "Mèk", "Jed", "Van", "Sam"],
     smsPrefix: "DoseBridge: Lè pou pran",
+    phoneShortLabel: "Telefòn #",
+    addNewBtn: "Ajoute",
+    filterBtn: "Filtre",
+    filterAllDays: "Tout jou yo",
+    filterStatusLabel: "Estati",
+    filterStatusAll: "Tout",
+    filterReset: "Reyajiste",
+    addMethodSubtitle: "Chwazi kijan ou vle ajoute medikaman an.",
+    addByTextTitle: "Ekri enfòmasyon",
+    addByTextDesc: "Tape non medikaman an, dòz la, ak orè rapèl la.",
+    addByPhotoTitle: "Pran foto",
+    addByPhotoDesc: "Pran foto etikèt la pou Gemini li tèks la pita.",
+    photoCaptureHint: "Pran oswa telechaje yon foto klè nan etikèt boutèy la.",
+    photoSelectBtn: "Pran foto / Chwazi imaj",
+    photoRetakeBtn: "Chwazi yon lòt foto",
+    photoGeminiPending: "Foto a pare — lekti etikèt ak Gemini API ap konekte la a pita.",
+    backToOptions: "Retounen",
+    switchToTextBtn: "Ekri enfòmasyon pito",
   },
 };
 

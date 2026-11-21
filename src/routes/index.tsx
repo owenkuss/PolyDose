@@ -1,16 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Globe, HeartPulse } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Clock, Globe, Phone, Plus, X } from "lucide-react";
 import { toast } from "sonner";
-import { AddMedicationCard } from "@/components/dosebridge/AddMedicationCard";
+import { AddMedicationDialog } from "@/components/dosebridge/AddMedicationDialog";
+import { FilterPopover, type StatusFilter } from "@/components/dosebridge/FilterPopover";
 import { MedicationList } from "@/components/dosebridge/MedicationList";
-import { PhonePreview } from "@/components/dosebridge/PhonePreview";
-import { ProfileBar } from "@/components/dosebridge/ProfileBar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   createMedication,
   deleteMedication,
   fetchMedications,
-  fetchReminderLogs,
   loadFirstPatient,
   loadPatientByPhone,
   recordAutomaticReminder,
@@ -19,12 +28,14 @@ import {
   upsertPatientProfile,
   type MedicationRow,
   type PatientRow,
-  type ReminderLogRow,
 } from "@/lib/dosebridge-api";
 import {
+  COMMON_TIMEZONES,
+  countActiveMedicationsByDay,
   DEFAULT_DEMO_PHONE,
   detectBrowserTimezone,
   getDueScheduledKey,
+  getLocalDateParts,
   isValidPhoneNumber,
 } from "@/lib/dosebridge-utils";
 import {
@@ -65,8 +76,11 @@ function DoseBridgePage() {
   const [phoneInput, setPhoneInput] = useState(DEFAULT_DEMO_PHONE);
   const [timezone, setTimezone] = useState("America/New_York");
   const [medications, setMedications] = useState<MedicationRow[]>([]);
-  const [selectedMedId, setSelectedMedId] = useState<string | null>(null);
-  const [reminderLogs, setReminderLogs] = useState<ReminderLogRow[]>([]);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [todayIdx, setTodayIdx] = useState<number>(0);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [phonePopoverOpen, setPhonePopoverOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isAddingMed, setIsAddingMed] = useState(false);
 
@@ -95,14 +109,9 @@ function DoseBridgePage() {
           if (isLanguageCode(found.language)) {
             setLanguage(found.language);
           }
-          const [meds, logs] = await Promise.all([
-            fetchMedications(found.id),
-            fetchReminderLogs(found.id),
-          ]);
+          const meds = await fetchMedications(found.id);
           if (cancelled) return;
           setMedications(meds);
-          setReminderLogs(logs);
-          setSelectedMedId(meds[0]?.id ?? null);
         } else {
           setTimezone(browserTz);
         }
@@ -116,6 +125,10 @@ function DoseBridgePage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    setTodayIdx(getLocalDateParts(new Date(), timezone).weekday);
+  }, [timezone]);
 
   useEffect(() => {
     if (!patient || medications.length === 0) return;
@@ -141,13 +154,10 @@ function DoseBridgePage() {
             scheduledKey,
           });
           if (!active || !result) continue;
-          setReminderLogs((prev) =>
-            prev.some((l) => l.id === result.log.id) ? prev : [...prev, result.log],
-          );
           setMedications((prev) =>
             prev.map((m) => (m.id === med.id ? result.medication : m)),
           );
-          toast.success(`${t.autoSentToast}: ${med.name}`);
+          toast.success(`${t.autoSentToast}: ${med.name}`, { description: messageText });
         } catch (err) {
           console.error("Automatic reminder dispatch failed:", err);
         }
@@ -177,33 +187,37 @@ function DoseBridgePage() {
     }
   }
 
-  async function handleSaveProfile() {
+  async function handleSaveProfile(nextTimezone?: string) {
     if (!isValidPhoneNumber(phoneInput)) {
       toast.error(t.invalidPhoneError);
       return;
     }
+    const tzToSave = nextTimezone ?? timezone;
     setIsSavingProfile(true);
     try {
       const saved = await upsertPatientProfile({
         phoneNumber: phoneInput,
         language,
-        timezone,
+        timezone: tzToSave,
       });
       setPatient(saved);
       window.localStorage.setItem(PHONE_STORAGE_KEY, saved.phone_number);
-      const [meds, logs] = await Promise.all([
-        fetchMedications(saved.id),
-        fetchReminderLogs(saved.id),
-      ]);
+      const meds = await fetchMedications(saved.id);
       setMedications(meds);
-      setReminderLogs(logs);
-      setSelectedMedId(meds[0]?.id ?? null);
+      setPhonePopoverOpen(false);
       toast.success(t.profileSavedToast);
     } catch (err) {
       console.error("Profile save failed:", err);
       toast.error(t.invalidPhoneError);
     } finally {
       setIsSavingProfile(false);
+    }
+  }
+
+  async function handleTimezoneChange(nextTz: string) {
+    setTimezone(nextTz);
+    if (isValidPhoneNumber(phoneInput)) {
+      await handleSaveProfile(nextTz);
     }
   }
 
@@ -235,7 +249,6 @@ function DoseBridgePage() {
         ...input,
       });
       setMedications((prev) => [created, ...prev]);
-      setSelectedMedId(created.id);
       toast.success(t.medAddedToast);
       return true;
     } catch (err) {
@@ -265,14 +278,7 @@ function DoseBridgePage() {
   async function handleDeleteMedication(med: MedicationRow) {
     try {
       await deleteMedication(med.id);
-      setMedications((prev) => {
-        const next = prev.filter((m) => m.id !== med.id);
-        if (selectedMedId === med.id) {
-          setSelectedMedId(next[0]?.id ?? null);
-        }
-        return next;
-      });
-      setReminderLogs((prev) => prev.filter((l) => l.medication_id !== med.id));
+      setMedications((prev) => prev.filter((m) => m.id !== med.id));
       toast.success(t.medDeletedToast);
     } catch (err) {
       console.error("Delete medication failed:", err);
@@ -281,7 +287,6 @@ function DoseBridgePage() {
 
   async function handleSendTestReminder(med: MedicationRow) {
     if (!patient) return;
-    setSelectedMedId(med.id);
     const messageText = buildSmsReminderText(language, {
       name: med.name,
       dosage: med.dosage,
@@ -296,103 +301,209 @@ function DoseBridgePage() {
         scheduledKey: `test-${Date.now()}`,
       });
       if (result) {
-        setReminderLogs((prev) => [...prev, result.log]);
         setMedications((prev) =>
           prev.map((m) => (m.id === med.id ? result.medication : m)),
         );
       }
-      toast.success(t.testSentToast);
+      toast.success(t.testSentToast, { description: messageText });
     } catch (err) {
       console.error("Send test reminder failed:", err);
     }
   }
 
-  const activeMedication =
-    medications.find((m) => m.id === selectedMedId) ?? medications[0] ?? null;
+  const timezoneOptions = useMemo(() => {
+    const list: string[] = [...COMMON_TIMEZONES];
+    if (timezone && !list.includes(timezone)) {
+      list.unshift(timezone);
+    }
+    return list;
+  }, [timezone]);
+
+  const activeCounts = useMemo(
+    () => countActiveMedicationsByDay(medications),
+    [medications],
+  );
+
+  const visibleMedications = useMemo(() => {
+    return medications
+      .filter((med) => (selectedDay === null ? true : med.days_of_week.includes(selectedDay)))
+      .filter((med) =>
+        statusFilter === "all" ? true : statusFilter === "active" ? med.is_active : !med.is_active,
+      )
+      .sort((a, b) => a.reminder_time.localeCompare(b.reminder_time));
+  }, [medications, selectedDay, statusFilter]);
+
+  const isFiltered = selectedDay !== null || statusFilter !== "all";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
-              <HeartPulse className="h-6 w-6" aria-hidden="true" />
-            </div>
-            <div>
-              <h1 className="font-display text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
-                DoseBridge
-              </h1>
-              <p className="text-sm font-medium text-muted-foreground">{t.tagline}</p>
-            </div>
+        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-2.5 px-4 py-3.5 sm:grid-cols-3 sm:gap-3 sm:px-6">
+          <div className="flex items-center">
+            <Select
+              value={language}
+              onValueChange={(val) => {
+                if (isLanguageCode(val)) void handleLanguageSwitch(val);
+              }}
+            >
+              <SelectTrigger
+                aria-label={t.languageLabel}
+                className="h-11 w-full rounded-xl border-border bg-card px-3.5 text-sm font-bold text-foreground shadow-xs"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <Globe className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                  <span className="truncate">
+                    <SelectValue />
+                  </span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code} className="text-sm font-medium">
+                    {lang.nativeLabel}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div
-            role="group"
-            aria-label={t.languageLabel}
-            className="flex flex-wrap items-center gap-1.5"
-          >
-            <Globe className="mr-1 h-4 w-4 text-primary" aria-hidden="true" />
-            {LANGUAGES.map((lang) => {
-              const active = lang.code === language;
-              return (
-                <button
-                  key={lang.code}
+          <div className="flex items-center">
+            <Popover open={phonePopoverOpen} onOpenChange={setPhonePopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
                   type="button"
-                  onClick={() => handleLanguageSwitch(lang.code)}
-                  aria-pressed={active}
-                  className={`min-h-10 rounded-full border px-3.5 py-1.5 text-sm font-bold transition-colors ${
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground hover:border-primary hover:bg-accent"
-                  }`}
+                  variant="outline"
+                  className="h-11 w-full justify-start gap-2 rounded-xl border-border bg-card px-3.5 text-sm font-bold text-foreground shadow-xs hover:border-primary hover:bg-accent"
                 >
-                  {lang.nativeLabel}
-                </button>
-              );
-            })}
+                  <Phone className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                  <span className="truncate">{phoneInput || t.phoneShortLabel}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="center" className="w-80 rounded-xl border-border bg-popover p-4 shadow-lg">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void handleSaveProfile();
+                  }}
+                  className="space-y-3"
+                >
+                  <div className="space-y-1.5">
+                    <Label htmlFor="patient-phone" className="text-sm font-bold">
+                      {t.phoneLabel}
+                    </Label>
+                    <Input
+                      id="patient-phone"
+                      type="tel"
+                      value={phoneInput}
+                      onChange={(e) => setPhoneInput(e.target.value)}
+                      placeholder={t.phonePlaceholder}
+                      className="h-11 bg-background text-base"
+                      autoComplete="tel"
+                    />
+                  </div>
+                  <Button type="submit" disabled={isSavingProfile} className="h-10 w-full font-bold">
+                    <Check className="h-4 w-4" aria-hidden="true" />
+                    {isSavingProfile ? t.saving : t.saveProfile}
+                  </Button>
+                </form>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex items-center">
+            <Select value={timezone} onValueChange={(val) => void handleTimezoneChange(val)}>
+              <SelectTrigger
+                aria-label={t.timezoneLabel}
+                className="h-11 w-full rounded-xl border-border bg-card px-3.5 text-sm font-bold text-foreground shadow-xs"
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <Clock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                  <span className="truncate">
+                    <SelectValue />
+                  </span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {timezoneOptions.map((tz) => (
+                  <SelectItem key={tz} value={tz} className="text-sm">
+                    {tz.replace(/_/g, " ")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
-        <ProfileBar
-          t={t}
-          phone={phoneInput}
-          timezone={timezone}
-          isSaving={isSavingProfile}
-          onPhoneChange={setPhoneInput}
-          onTimezoneChange={setTimezone}
-          onSave={handleSaveProfile}
-        />
+      <main className="mx-auto max-w-4xl space-y-4 px-4 py-5 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button
+            type="button"
+            onClick={() => setAddDialogOpen(true)}
+            className="h-11 gap-2 rounded-xl px-5 text-base font-bold shadow-xs"
+          >
+            <span>{t.addNewBtn}</span>
+            <Plus className="h-5 w-5" aria-hidden="true" />
+          </Button>
 
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_390px]">
-          <div className="space-y-6">
-            <AddMedicationCard
+          <div className="flex items-center gap-2">
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDay(null);
+                  setStatusFilter("all");
+                }}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-primary/30 bg-accent px-3 text-xs font-bold text-accent-foreground hover:bg-accent/80"
+              >
+                <span>
+                  {[
+                    selectedDay !== null ? t.daysShort[selectedDay] : null,
+                    statusFilter === "active"
+                      ? t.activeBadge
+                      : statusFilter === "paused"
+                        ? t.pausedBadge
+                        : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            )}
+            <FilterPopover
               t={t}
-              isSubmitting={isAddingMed}
-              onAdd={handleAddMedication}
-            />
-            <MedicationList
-              t={t}
-              medications={medications}
-              timezone={timezone}
-              selectedMedId={activeMedication?.id ?? null}
-              onSelect={(med) => setSelectedMedId(med.id)}
-              onToggleActive={handleToggleActive}
-              onDelete={handleDeleteMedication}
-              onSendTest={handleSendTestReminder}
+              selectedDay={selectedDay}
+              todayIdx={todayIdx}
+              activeCounts={activeCounts}
+              statusFilter={statusFilter}
+              onSelectDay={setSelectedDay}
+              onSelectStatus={setStatusFilter}
+              onReset={() => {
+                setSelectedDay(null);
+                setStatusFilter("all");
+              }}
             />
           </div>
-
-          <PhonePreview
-            t={t}
-            language={language}
-            phoneNumber={phoneInput}
-            timezone={timezone}
-            activeMedication={activeMedication}
-            logs={reminderLogs}
-          />
         </div>
+
+        <MedicationList
+          t={t}
+          medications={visibleMedications}
+          timezone={timezone}
+          isFiltered={isFiltered}
+          onToggleActive={handleToggleActive}
+          onDelete={handleDeleteMedication}
+          onSendTest={handleSendTestReminder}
+        />
+
+        <AddMedicationDialog
+          open={addDialogOpen}
+          onOpenChange={setAddDialogOpen}
+          t={t}
+          isSubmitting={isAddingMed}
+          onAdd={handleAddMedication}
+        />
       </main>
     </div>
   );
