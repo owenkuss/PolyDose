@@ -61,6 +61,65 @@ export function formatTimeCompact12h(time24: string): string {
   return `${h12}:${String(minNum).padStart(2, "0")} ${period}`;
 }
 
+// --- Typed time input helpers ---------------------------------------------
+// The time field is a plain text box: the user types digits and picks AM/PM.
+
+/** Keep only the digits the user typed, capped at 4 ("1230"). */
+export function sanitizeTimeDigits(raw: string): string {
+  return raw.replace(/\D/g, "").slice(0, 4);
+}
+
+/**
+ * Show typed digits the way a person expects while typing:
+ * "8" -> "8", "83" -> "8:3", "830" -> "8:30", "1230" -> "12:30".
+ */
+export function formatTimeDigits(digits: string): string {
+  if (digits.length === 0) return "";
+  if (digits.length <= 2) {
+    // Two digits that can't be an hour (e.g. "83") are hour + first minute digit.
+    return Number(digits) > 12 ? `${digits[0]}:${digits[1]}` : digits;
+  }
+  return `${digits.slice(0, digits.length - 2)}:${digits.slice(-2)}`;
+}
+
+/**
+ * Turn typed digits plus the chosen AM/PM into the stored "HH:MM" 24-hour
+ * string, or null when the text isn't a complete, valid time yet.
+ */
+export function typedTimeTo24(
+  digits: string,
+  period: "AM" | "PM",
+): string | null {
+  const d = sanitizeTimeDigits(digits);
+  if (!d) return null;
+  let hour: number;
+  let minute: number;
+  if (d.length <= 2 && Number(d) <= 12) {
+    hour = Number(d);
+    minute = 0;
+  } else if (d.length <= 2) {
+    hour = Number(d[0]);
+    minute = Number(d[1]);
+  } else {
+    hour = Number(d.slice(0, d.length - 2));
+    minute = Number(d.slice(-2));
+  }
+  if (hour < 1 || hour > 12 || minute > 59) return null;
+  let hour24 = hour % 12;
+  if (period === "PM") hour24 += 12;
+  return `${String(hour24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+/** The stored "HH:MM" 24-hour string as text for the input, e.g. "08:00" -> "8:00". */
+export function formatTimeForInput(time24: string): string {
+  const [hStr, mStr] = time24.split(":");
+  const hour = Number(hStr);
+  const minute = Number(mStr);
+  if (Number.isNaN(hour) || Number.isNaN(minute)) return "";
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12}:${String(minute).padStart(2, "0")}`;
+}
+
 export function isTakenToday(
   lastConfirmedAt: string | null | undefined,
   timezone?: string,

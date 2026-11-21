@@ -1,39 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
-import { formatTimeCompact12h } from "@/lib/dosebridge-utils";
+import {
+  formatTimeDigits,
+  formatTimeForInput,
+  sanitizeTimeDigits,
+  typedTimeTo24,
+} from "@/lib/dosebridge-utils";
 import type { TranslationDict } from "@/lib/i18n";
-
-const HOURS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
-
-interface TimeParts {
-  hour12: number;
-  minute: number;
-  period: "AM" | "PM";
-}
-
-function parseTime24(time24: string): TimeParts {
-  const [hStr, mStr] = time24.split(":");
-  let hour = Number(hStr);
-  let minute = Number(mStr);
-  if (Number.isNaN(hour) || hour < 0 || hour > 23) hour = 8;
-  if (Number.isNaN(minute) || minute < 0 || minute > 59) minute = 0;
-  // Snap to the nearest 5-minute interval so the picker always shows a valid value.
-  minute = Math.round(minute / 5) * 5;
-  if (minute === 60) {
-    minute = 0;
-    hour = (hour + 1) % 24;
-  }
-  const period: "AM" | "PM" = hour >= 12 ? "PM" : "AM";
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  return { hour12, minute, period };
-}
-
-function toTime24(parts: TimeParts): string {
-  let hour = parts.hour12 % 12;
-  if (parts.period === "PM") hour += 12;
-  return `${String(hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
-}
 
 interface TimePickerPopoverProps {
   id?: string;
@@ -42,38 +15,47 @@ interface TimePickerPopoverProps {
   t: TranslationDict;
 }
 
+function periodOf(time24: string): "AM" | "PM" {
+  return Number(time24.split(":")[0]) >= 12 ? "PM" : "AM";
+}
+
+/**
+ * Time field the person fills in by hand: type the time, then tap AM or PM.
+ * The value stays the stored 24-hour "HH:MM" string.
+ */
 export function TimePickerPopover({ id, value, onChange, t }: TimePickerPopoverProps) {
-  const [open, setOpen] = useState(false);
-  const [parts, setParts] = useState<TimeParts>(() => parseTime24(value));
-  const rootRef = useRef<HTMLDivElement>(null);
+  const [digits, setDigits] = useState(() => sanitizeTimeDigits(formatTimeForInput(value)));
+  const [period, setPeriod] = useState<"AM" | "PM">(() => periodOf(value));
+  const editingRef = useRef(false);
 
-  // Keep the popover in sync if the value changes externally (e.g. form reset).
+  // Follow external changes (form reset, preset pick) unless the person is typing.
   useEffect(() => {
-    if (!open) setParts(parseTime24(value));
-  }, [value, open]);
+    if (editingRef.current) return;
+    setDigits(sanitizeTimeDigits(formatTimeForInput(value)));
+    setPeriod(periodOf(value));
+  }, [value]);
 
-  useEffect(() => {
-    if (!open) return;
-    function onPointerDown(e: PointerEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
+  function commit(nextDigits: string, nextPeriod: "AM" | "PM") {
+    const parsed = typedTimeTo24(nextDigits, nextPeriod);
+    if (parsed) onChange(parsed);
+  }
 
-  function apply(next: TimeParts, close = false) {
-    setParts(next);
-    onChange(toTime24(next));
-    if (close) setOpen(false);
+  function handleTextChange(raw: string) {
+    const next = sanitizeTimeDigits(raw);
+    setDigits(next);
+    commit(next, period);
+  }
+
+  function handlePeriodChange(next: "AM" | "PM") {
+    setPeriod(next);
+    commit(digits, next);
+  }
+
+  function handleBlur() {
+    editingRef.current = false;
+    // Put the field back to the time that is actually saved.
+    setDigits(sanitizeTimeDigits(formatTimeForInput(value)));
+    setPeriod(periodOf(value));
   }
 
   const presets: { label: string; time: string }[] = [
@@ -83,122 +65,82 @@ export function TimePickerPopover({ id, value, onChange, t }: TimePickerPopoverP
     { label: t.timePresetBedtime, time: "21:00" },
   ];
 
+  const hintId = id ? `${id}-hint` : undefined;
+
   return (
-    <div ref={rootRef} className="relative sm:w-44">
-      <button
-        id={id}
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        className="flex h-11 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-base font-medium text-foreground shadow-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span>{formatTimeCompact12h(value)}</span>
-        <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-      </button>
-
-      {open && (
-        <div
-          role="dialog"
-          aria-label={t.timeLabel}
-          className="absolute left-0 z-50 mt-2 w-72 rounded-xl border border-border bg-popover p-3 shadow-lg"
-        >
-          {/* Quick-select routine presets */}
-          <div className="grid grid-cols-2 gap-1.5">
-            {presets.map((preset) => (
-              <button
-                key={preset.time}
-                type="button"
-                onClick={() => apply(parseTime24(preset.time), true)}
-                className={`min-h-9 rounded-lg border px-2 text-sm font-bold transition-colors ${
-                  value === preset.time
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background text-foreground hover:border-primary hover:bg-accent"
-                }`}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="my-3 border-t border-border" />
-
-          {/* Hour / Minute / AM-PM selectors */}
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <p className="mb-1 text-center text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                {t.timeHourLabel}
-              </p>
-              <div className="grid max-h-36 grid-cols-3 gap-1 overflow-y-auto pr-0.5">
-                {HOURS.map((h) => (
-                  <button
-                    key={h}
-                    type="button"
-                    onClick={() => apply({ ...parts, hour12: h })}
-                    aria-pressed={parts.hour12 === h}
-                    className={`min-h-8 rounded-md text-sm font-bold transition-colors ${
-                      parts.hour12 === h
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-background text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    {h}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex-1">
-              <p className="mb-1 text-center text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                {t.timeMinuteLabel}
-              </p>
-              <div className="grid max-h-36 grid-cols-3 gap-1 overflow-y-auto pr-0.5">
-                {MINUTES.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => apply({ ...parts, minute: m })}
-                    aria-pressed={parts.minute === m}
-                    className={`min-h-8 rounded-md text-sm font-bold transition-colors ${
-                      parts.minute === m
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-background text-foreground hover:bg-accent"
-                    }`}
-                  >
-                    {String(m).padStart(2, "0")}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex w-14 flex-col gap-1.5 pt-5">
-              {(["AM", "PM"] as const).map((period) => (
-                <button
-                  key={period}
-                  type="button"
-                  onClick={() => apply({ ...parts, period })}
-                  aria-pressed={parts.period === period}
-                  className={`min-h-11 rounded-md border text-sm font-bold transition-colors ${
-                    parts.period === period
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background text-foreground hover:bg-accent"
-                  }`}
-                >
-                  {period}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="mt-3 h-10 w-full rounded-lg bg-primary text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            {t.timeDone}
-          </button>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <input
+            id={id}
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="8:00"
+            aria-describedby={hintId}
+            value={formatTimeDigits(digits)}
+            onChange={(e) => handleTextChange(e.target.value)}
+            onFocus={() => {
+              editingRef.current = true;
+            }}
+            onBlur={handleBlur}
+            className="h-11 w-full rounded-md border border-input bg-background px-3 pr-9 text-base font-bold text-foreground shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <Clock
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
         </div>
+
+        <div
+          role="group"
+          aria-label={t.timeLabel}
+          className="flex shrink-0 items-center gap-1 rounded-md border border-border bg-background p-1"
+        >
+          {(["AM", "PM"] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={period === option}
+              onClick={() => handlePeriodChange(option)}
+              className={`min-h-9 min-w-12 rounded-md px-2 text-sm font-bold transition-colors ${
+                period === option
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-foreground hover:bg-accent"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {hintId && (
+        <p id={hintId} className="text-xs font-medium text-muted-foreground">
+          {t.timeInputHint}
+        </p>
       )}
+
+      <div className="grid grid-cols-4 gap-1.5">
+        {presets.map((preset) => (
+          <button
+            key={preset.time}
+            type="button"
+            onClick={() => {
+              editingRef.current = false;
+              onChange(preset.time);
+            }}
+            aria-pressed={value === preset.time}
+            className={`min-h-9 rounded-lg border px-1 text-xs font-bold transition-colors ${
+              value === preset.time
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background text-foreground hover:border-primary hover:bg-accent"
+            }`}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

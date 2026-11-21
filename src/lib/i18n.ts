@@ -45,6 +45,7 @@ export interface TranslationDict {
   timeHourLabel: string;
   timeMinuteLabel: string;
   timeDone: string;
+  timeInputHint: string;
   addReminderBtn: string;
   medAddedToast: string;
   medValidationError: string;
@@ -123,6 +124,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     timeHourLabel: "Hour",
     timeMinuteLabel: "Min",
     timeDone: "Done",
+    timeInputHint: "Type a time, then tap AM or PM",
     addReminderBtn: "Add Reminder",
     medAddedToast: "Medication reminder added",
     medValidationError: "Please enter a medication name, dosage, and at least one day.",
@@ -199,6 +201,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     timeHourLabel: "Hora",
     timeMinuteLabel: "Min",
     timeDone: "Listo",
+    timeInputHint: "Escribe una hora y toca AM o PM",
     addReminderBtn: "Agregar Recordatorio",
     medAddedToast: "Recordatorio de medicina agregado",
     medValidationError: "Escribe el nombre, la dosis y elige al menos un día.",
@@ -275,6 +278,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     timeHourLabel: "时",
     timeMinuteLabel: "分",
     timeDone: "完成",
+    timeInputHint: "输入时间，然后选择上午或下午",
     addReminderBtn: "添加提醒",
     medAddedToast: "已添加服药提醒",
     medValidationError: "请填写药物名称、剂量，并至少选择一天。",
@@ -351,6 +355,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     timeHourLabel: "Heure",
     timeMinuteLabel: "Min",
     timeDone: "Terminé",
+    timeInputHint: "Saisissez une heure puis touchez AM ou PM",
     addReminderBtn: "Ajouter le Rappel",
     medAddedToast: "Rappel de médicament ajouté",
     medValidationError: "Indiquez le nom, la dose et au moins un jour.",
@@ -427,6 +432,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     timeHourLabel: "Giờ",
     timeMinuteLabel: "Phút",
     timeDone: "Xong",
+    timeInputHint: "Nhập giờ rồi chọn SA hoặc CH",
     addReminderBtn: "Thêm Lịch Nhắc",
     medAddedToast: "Đã thêm lịch nhắc thuốc",
     medValidationError: "Vui lòng nhập tên thuốc, liều dùng và chọn ít nhất một ngày.",
@@ -503,6 +509,7 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     timeHourLabel: "Lè",
     timeMinuteLabel: "Minit",
     timeDone: "Fini",
+    timeInputHint: "Tape yon lè epi touche AM oswa PM",
     addReminderBtn: "Ajoute Rapèl",
     medAddedToast: "Rapèl medikaman an ajoute",
     medValidationError: "Tanpri antre non medikaman an, dòz la, ak omwen yon jou.",

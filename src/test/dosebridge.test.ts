@@ -4,10 +4,14 @@ import {
   countActiveMedicationsByDay,
   formatTime12h,
   formatTimeCompact12h,
+  formatTimeDigits,
+  formatTimeForInput,
   getDueScheduledKey,
   getMedicationsForDay,
   isTakenToday,
   isValidPhoneNumber,
+  sanitizeTimeDigits,
+  typedTimeTo24,
 } from "@/lib/dosebridge-utils";
 import {
   filterLocalMedications,
@@ -129,5 +133,45 @@ describe("DoseBridge i18n and SMS rules", () => {
 
     const merged = mergeMedicationSuggestions(local, parsed, 8);
     expect(merged.filter((m) => m.name === "Metformin")).toHaveLength(1);
+  });
+});
+
+describe("Typed time input", () => {
+  it("keeps only typed digits and shows a colon as the person types", () => {
+    expect(sanitizeTimeDigits("8:30 AM")).toBe("830");
+    expect(sanitizeTimeDigits("abc")).toBe("");
+    expect(formatTimeDigits("")).toBe("");
+    expect(formatTimeDigits("8")).toBe("8");
+    expect(formatTimeDigits("83")).toBe("8:3");
+    expect(formatTimeDigits("830")).toBe("8:30");
+    expect(formatTimeDigits("1230")).toBe("12:30");
+  });
+
+  it("turns typed digits plus AM/PM into the stored 24-hour string", () => {
+    expect(typedTimeTo24("8", "AM")).toBe("08:00");
+    expect(typedTimeTo24("830", "PM")).toBe("20:30");
+    expect(typedTimeTo24("1230", "PM")).toBe("12:30");
+    expect(typedTimeTo24("12", "AM")).toBe("00:00");
+    expect(typedTimeTo24("1215", "PM")).toBe("12:15");
+    expect(typedTimeTo24("83", "AM")).toBe("08:03");
+  });
+
+  it("rejects incomplete or impossible times instead of saving them", () => {
+    expect(typedTimeTo24("", "AM")).toBeNull();
+    expect(typedTimeTo24("0", "AM")).toBeNull();
+    expect(typedTimeTo24("1330", "PM")).toBeNull();
+    expect(typedTimeTo24("875", "AM")).toBeNull();
+  });
+
+  it("shows the stored time in the input without AM/PM", () => {
+    expect(formatTimeForInput("08:00")).toBe("8:00");
+    expect(formatTimeForInput("21:30")).toBe("9:30");
+    expect(formatTimeForInput("00:05")).toBe("12:05");
+  });
+
+  it("gives every language a time-entry hint", () => {
+    for (const lang of LANGUAGES) {
+      expect(TRANSLATIONS[lang.code].timeInputHint.length).toBeGreaterThan(0);
+    }
   });
 });
