@@ -279,6 +279,34 @@ function DoseBridgePage() {
     }
   }
 
+  async function handleSendTestReminder(med: MedicationRow) {
+    if (!patient) return;
+    setSelectedMedId(med.id);
+    const messageText = buildSmsReminderText(language, {
+      name: med.name,
+      dosage: med.dosage,
+      instructions: med.instructions,
+    });
+    try {
+      const result = await recordAutomaticReminder({
+        patientId: patient.id,
+        medicationId: med.id,
+        messageText,
+        language,
+        scheduledKey: `test-${Date.now()}`,
+      });
+      if (result) {
+        setReminderLogs((prev) => [...prev, result.log]);
+        setMedications((prev) =>
+          prev.map((m) => (m.id === med.id ? result.medication : m)),
+        );
+      }
+      toast.success(t.testSentToast);
+    } catch (err) {
+      console.error("Send test reminder failed:", err);
+    }
+  }
+
   const activeMedication =
     medications.find((m) => m.id === selectedMedId) ?? medications[0] ?? null;
 
@@ -352,6 +380,7 @@ function DoseBridgePage() {
               onSelect={(med) => setSelectedMedId(med.id)}
               onToggleActive={handleToggleActive}
               onDelete={handleDeleteMedication}
+              onSendTest={handleSendTestReminder}
             />
           </div>
 

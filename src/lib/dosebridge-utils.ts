@@ -51,6 +51,60 @@ export function formatTime12h(time24: string): string {
   return `${String(h12).padStart(2, "0")}:${String(minNum).padStart(2, "0")} ${period}`;
 }
 
+export function formatTimeCompact12h(time24: string): string {
+  const parts = time24.split(":");
+  const hourNum = Number(parts[0] ?? 8);
+  const minNum = Number(parts[1] ?? 0);
+  if (Number.isNaN(hourNum) || Number.isNaN(minNum)) return time24;
+  const period = hourNum >= 12 ? "PM" : "AM";
+  const h12 = hourNum % 12 === 0 ? 12 : hourNum % 12;
+  return `${h12}:${String(minNum).padStart(2, "0")} ${period}`;
+}
+
+export function isTakenToday(
+  lastConfirmedAt: string | null | undefined,
+  timezone?: string,
+  now: Date = new Date(),
+): boolean {
+  if (!lastConfirmedAt) return false;
+  const confirmed = new Date(lastConfirmedAt);
+  if (Number.isNaN(confirmed.getTime())) return false;
+  try {
+    const fmt = new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      ...(timezone ? { timeZone: timezone } : {}),
+    });
+    return fmt.format(confirmed) === fmt.format(now);
+  } catch {
+    return confirmed.toDateString() === now.toDateString();
+  }
+}
+
+export function getMedicationsForDay<
+  T extends { days_of_week: number[]; reminder_time: string },
+>(medications: readonly T[], dayIndex: number): T[] {
+  return medications
+    .filter((med) => med.days_of_week.includes(dayIndex))
+    .sort((a, b) => a.reminder_time.localeCompare(b.reminder_time));
+}
+
+export function countActiveMedicationsByDay(
+  medications: readonly { is_active: boolean; days_of_week: number[] }[],
+): [number, number, number, number, number, number, number] {
+  const counts: [number, number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0, 0];
+  for (const med of medications) {
+    if (!med.is_active) continue;
+    for (const day of med.days_of_week) {
+      if (day >= 0 && day <= 6) {
+        counts[day] = (counts[day] ?? 0) + 1;
+      }
+    }
+  }
+  return counts;
+}
+
 export function formatClockTime(date: Date, timezone?: string): string {
   try {
     return new Intl.DateTimeFormat(undefined, {

@@ -43,8 +43,13 @@ export interface TranslationDict {
   medValidationError: string;
   scheduleTitle: string;
   scheduleEmpty: string;
+  dayEmptyState: string;
   activeBadge: string;
   pausedBadge: string;
+  takenShortBadge: string;
+  testShortBtn: string;
+  testSentToast: string;
+  todayLabel: string;
   deleteBtn: string;
   medDeletedToast: string;
   autoSendNote: string;
@@ -91,8 +96,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     medValidationError: "Please enter a medication name, dosage, and at least one day.",
     scheduleTitle: "Active Medication Schedule",
     scheduleEmpty: "No reminders yet. Add a medication above to get started.",
+    dayEmptyState: "No medications scheduled for this day.",
     activeBadge: "Active",
     pausedBadge: "Paused",
+    takenShortBadge: "Taken",
+    testShortBtn: "Test",
+    testSentToast: "Test reminder sent",
+    todayLabel: "Today",
     deleteBtn: "Delete",
     medDeletedToast: "Medication removed",
     autoSendNote: "Sends automatically at scheduled time",
@@ -137,8 +147,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     medValidationError: "Escribe el nombre, la dosis y elige al menos un día.",
     scheduleTitle: "Horario de Medicinas",
     scheduleEmpty: "Aún no hay recordatorios. Agrega una medicina arriba.",
+    dayEmptyState: "No hay medicinas programadas para este día.",
     activeBadge: "Activo",
     pausedBadge: "Pausado",
+    takenShortBadge: "Tomada",
+    testShortBtn: "Prueba",
+    testSentToast: "Mensaje de prueba enviado",
+    todayLabel: "Hoy",
     deleteBtn: "Eliminar",
     medDeletedToast: "Medicina eliminada",
     autoSendNote: "Se envía automáticamente a la hora programada",
@@ -183,8 +198,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     medValidationError: "请填写药物名称、剂量，并至少选择一天。",
     scheduleTitle: "当前服药计划",
     scheduleEmpty: "暂无提醒，请在上方添加一种药物。",
+    dayEmptyState: "这一天没有安排服药。",
     activeBadge: "已开启",
     pausedBadge: "已暂停",
+    takenShortBadge: "已服",
+    testShortBtn: "测试",
+    testSentToast: "测试提醒已发送",
+    todayLabel: "今天",
     deleteBtn: "删除",
     medDeletedToast: "药物已删除",
     autoSendNote: "到设定时间自动发送提醒",
@@ -229,8 +249,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     medValidationError: "Indiquez le nom, la dose et au moins un jour.",
     scheduleTitle: "Programme de Médicaments",
     scheduleEmpty: "Aucun rappel. Ajoutez un médicament ci-dessus.",
+    dayEmptyState: "Aucun médicament prévu pour ce jour.",
     activeBadge: "Actif",
     pausedBadge: "En pause",
+    takenShortBadge: "Pris",
+    testShortBtn: "Test",
+    testSentToast: "Rappel test envoyé",
+    todayLabel: "Aujourd'hui",
     deleteBtn: "Supprimer",
     medDeletedToast: "Médicament supprimé",
     autoSendNote: "Envoi automatique à l'heure prévue",
@@ -275,8 +300,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     medValidationError: "Vui lòng nhập tên thuốc, liều dùng và chọn ít nhất một ngày.",
     scheduleTitle: "Lịch Uống Thuốc Hiện Tại",
     scheduleEmpty: "Chưa có lịch nhắc. Hãy thêm thuốc ở trên.",
+    dayEmptyState: "Không có lịch uống thuốc cho ngày này.",
     activeBadge: "Đang bật",
     pausedBadge: "Tạm dừng",
+    takenShortBadge: "Đã uống",
+    testShortBtn: "Thử",
+    testSentToast: "Đã gửi tin nhắn thử",
+    todayLabel: "Hôm nay",
     deleteBtn: "Xóa",
     medDeletedToast: "Đã xóa thuốc",
     autoSendNote: "Tự động gửi đúng giờ đã đặt",
@@ -321,8 +351,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     medValidationError: "Tanpri antre non medikaman an, dòz la, ak omwen yon jou.",
     scheduleTitle: "Orè Medikaman Aktif",
     scheduleEmpty: "Poko gen rapèl. Ajoute yon medikaman anwo a.",
+    dayEmptyState: "Pa gen medikaman pwograme pou jou sa a.",
     activeBadge: "Aktif",
     pausedBadge: "Sou Pòz",
+    takenShortBadge: "Pran",
+    testShortBtn: "Tès",
+    testSentToast: "Tès rapèl la voye",
+    todayLabel: "Jodi a",
     deleteBtn: "Efase",
     medDeletedToast: "Medikaman an efase",
     autoSendNote: "Voye otomatikman nan lè ki pwograme a",

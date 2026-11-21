@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { buildSmsReminderText, LANGUAGES, TRANSLATIONS } from "@/lib/i18n";
-import { formatTime12h, getDueScheduledKey, isValidPhoneNumber } from "@/lib/dosebridge-utils";
+import {
+  countActiveMedicationsByDay,
+  formatTime12h,
+  formatTimeCompact12h,
+  getDueScheduledKey,
+  getMedicationsForDay,
+  isTakenToday,
+  isValidPhoneNumber,
+} from "@/lib/dosebridge-utils";
 
 describe("DoseBridge i18n and SMS rules", () => {
   it("supports all 6 requested languages with 7 day names", () => {
@@ -70,5 +78,25 @@ describe("DoseBridge i18n and SMS rules", () => {
     expect(isValidPhoneNumber("123")).toBe(false);
     expect(formatTime12h("08:00")).toBe("08:00 AM");
     expect(formatTime12h("21:30")).toBe("09:30 PM");
+    expect(formatTimeCompact12h("08:00")).toBe("8:00 AM");
+    expect(formatTimeCompact12h("21:30")).toBe("9:30 PM");
+  });
+
+  it("filters medications by day sorted chronologically and counts only active medications per day", () => {
+    const meds = [
+      { name: "Evening", is_active: true, days_of_week: [1, 3], reminder_time: "21:00" },
+      { name: "Morning", is_active: true, days_of_week: [1], reminder_time: "08:00" },
+      { name: "Paused", is_active: false, days_of_week: [1], reminder_time: "12:00" },
+    ];
+    const monday = getMedicationsForDay(meds, 1);
+    expect(monday.map((m) => m.name)).toEqual(["Morning", "Paused", "Evening"]);
+    expect(getMedicationsForDay(meds, 2)).toEqual([]);
+
+    const counts = countActiveMedicationsByDay(meds);
+    expect(counts).toEqual([0, 2, 0, 1, 0, 0, 0]);
+
+    const now = new Date("2026-11-21T15:00:00Z");
+    expect(isTakenToday("2026-11-21T13:30:00Z", "America/New_York", now)).toBe(true);
+    expect(isTakenToday("2026-11-20T13:30:00Z", "America/New_York", now)).toBe(false);
   });
 });
