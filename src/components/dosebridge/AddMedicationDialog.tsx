@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Camera, Check, FileText, Pencil, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Check, FileText, Loader2, Pencil, Plus, Sparkles, TriangleAlert } from "lucide-react";
 import { MedicationAutocomplete } from "@/components/dosebridge/MedicationAutocomplete";
 import { TimePickerPopover } from "@/components/dosebridge/TimePickerPopover";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { MedicationRow } from "@/lib/dosebridge-api";
+import { parseMedicationPhoto } from "@/lib/photo-parse.functions";
 import type { TranslationDict } from "@/lib/i18n";
 import type { MedicationSuggestion } from "@/lib/medication-search";
 
@@ -63,6 +64,9 @@ export function AddMedicationDialog({
   const [error, setError] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoName, setPhotoName] = useState<string>("");
+  const [parsing, setParsing] = useState(false);
+  const [parseError, setParseError] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -105,6 +109,9 @@ export function AddMedicationDialog({
     if (photoUrl) URL.revokeObjectURL(photoUrl);
     setPhotoUrl(null);
     setPhotoName("");
+    setParsing(false);
+    setParseError(false);
+    setPrefilled(false);
   }
 
   function handleOpenChange(nextOpen: boolean) {
@@ -118,6 +125,37 @@ export function AddMedicationDialog({
     if (photoUrl) URL.revokeObjectURL(photoUrl);
     setPhotoUrl(URL.createObjectURL(file));
     setPhotoName(file.name);
+    setParseError(false);
+    setPrefilled(false);
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = String(reader.result ?? "").split(",")[1] ?? "";
+      if (!base64) {
+        setParseError(true);
+        return;
+      }
+      setParsing(true);
+      try {
+        const parsed = await parseMedicationPhoto({
+          data: { imageBase64: base64, mimeType: file.type || "image/jpeg" },
+        });
+        if (!parsed.name && !parsed.dosage && !parsed.instructions) {
+          setParseError(true);
+          return;
+        }
+        if (parsed.name) setName(parsed.name);
+        if (parsed.dosage) setDosage(parsed.dosage);
+        if (parsed.instructions) setInstructions(parsed.instructions);
+        setPrefilled(true);
+        setMode("text");
+      } catch {
+        setParseError(true);
+      } finally {
+        setParsing(false);
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   function handleSelectMedication(suggestion: MedicationSuggestion) {
@@ -243,15 +281,27 @@ export function AddMedicationDialog({
                     className="mx-auto max-h-60 w-full rounded-lg object-contain"
                   />
                 </div>
-                <div className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-accent/60 p-3 text-xs font-medium text-accent-foreground">
-                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                  <span>{t.photoGeminiPending}</span>
-                </div>
+                {parsing && (
+                  <div className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-accent/60 p-3 text-xs font-medium text-accent-foreground">
+                    <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" aria-hidden="true" />
+                    <span>{t.photoParsing}</span>
+                  </div>
+                )}
+                {parseError && !parsing && (
+                  <div
+                    role="alert"
+                    className="flex items-start gap-2.5 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-xs font-medium text-destructive"
+                  >
+                    <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span>{t.photoParseFailed}</span>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={parsing}
                     className="h-11 flex-1 font-bold"
                   >
                     <Camera className="h-4 w-4" aria-hidden="true" />
@@ -260,6 +310,7 @@ export function AddMedicationDialog({
                   <Button
                     type="button"
                     onClick={() => setMode("text")}
+                    disabled={parsing}
                     className="h-11 flex-1 font-bold"
                   >
                     {t.switchToTextBtn}
@@ -293,6 +344,12 @@ export function AddMedicationDialog({
 
         {mode === "text" && (
           <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+            {prefilled && (
+              <div className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-accent/60 p-3 text-xs font-medium text-accent-foreground">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                <span>{t.photoGeminiPending}</span>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="med-name" className="text-sm font-bold">
                 {t.medNameLabel}
