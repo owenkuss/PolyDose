@@ -34,5 +34,3 @@ bun run dev
 - `TEXTBELT_API_KEY` — outbound SMS
 
 ---
-
-Built with [Lovable](https://lovable.dev) — continue in the [Lovable editor](https://lovable.dev/projects/46a93295-f32b-4375-8366-dac18b96c803).
