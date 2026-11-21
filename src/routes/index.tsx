@@ -47,6 +47,7 @@ import {
   TRANSLATIONS,
   type LanguageCode,
 } from "@/lib/i18n";
+import { generateSmsReminder } from "@/lib/gemini-reminders.functions";
 
 const PHONE_STORAGE_KEY = "dosebridge_phone";
 
@@ -320,11 +321,26 @@ function DoseBridgePage() {
 
   async function handleSendTestReminder(med: MedicationRow) {
     if (!patient) return;
-    const messageText = buildSmsReminderText(language, {
+    let messageText = buildSmsReminderText(language, {
       name: med.name,
       dosage: med.dosage,
       instructions: med.instructions,
     });
+    try {
+      const generated = await generateSmsReminder({
+        data: {
+          language,
+          name: med.name,
+          dosage: med.dosage,
+          instructions: med.instructions,
+        },
+      });
+      if (generated.messageText) {
+        messageText = generated.messageText;
+      }
+    } catch (err) {
+      console.error("Gemini SMS generation failed, using template:", err);
+    }
     try {
       const result = await recordAutomaticReminder({
         patientId: patient.id,

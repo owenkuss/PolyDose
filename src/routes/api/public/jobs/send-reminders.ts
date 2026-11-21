@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 import { getDueScheduledKey } from "@/lib/dosebridge-utils";
-import { buildSmsReminderText, isLanguageCode, type LanguageCode } from "@/lib/i18n";
+import { isLanguageCode, type LanguageCode } from "@/lib/i18n";
 
 const JobBodySchema = z.object({
   windowMinutes: z.number().int().min(1).max(60).optional(),
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/api/public/jobs/send-reminders")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { generateSmsReminderText } = await import("@/lib/gemini.server");
         const { data: meds, error } = await supabaseAdmin
           .from("medications")
           .select(
@@ -53,7 +54,8 @@ export const Route = createFileRoute("/api/public/jobs/send-reminders")({
           const scheduledKey = getDueScheduledKey(med, tz, now, windowMinutes);
           if (!scheduledKey) continue;
 
-          const messageText = buildSmsReminderText(lang, {
+          const messageText = await generateSmsReminderText({
+            language: lang,
             name: med.name,
             dosage: med.dosage,
             instructions: med.instructions,
