@@ -1,4 +1,4 @@
-import { CheckCircle2, Send, Trash2 } from "lucide-react";
+import { CheckCircle2, Pencil, Send, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -18,6 +18,7 @@ interface MedicationListProps {
   timezone: string;
   isFiltered: boolean;
   onToggleActive: (med: MedicationRow, nextActive: boolean) => void;
+  onEdit: (med: MedicationRow) => void;
   onDelete: (med: MedicationRow) => void;
   onSendTest: (med: MedicationRow) => void;
 }
@@ -28,6 +29,7 @@ export function MedicationList({
   timezone,
   isFiltered,
   onToggleActive,
+  onEdit,
   onDelete,
   onSendTest,
 }: MedicationListProps) {
@@ -83,6 +85,17 @@ export function MedicationList({
                         {t.takenShortBadge}
                       </Badge>
                     )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onEdit(med)}
+                      aria-label={`${t.editBtn} ${med.name}`}
+                      className="h-8 gap-1 px-2.5 text-xs font-bold text-foreground hover:bg-accent"
+                    >
+                      <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t.editBtn}
+                    </Button>
                     <Button
                       type="button"
                       size="sm"

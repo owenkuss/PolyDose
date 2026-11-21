@@ -24,6 +24,7 @@ import {
   loadPatientByPhone,
   recordAutomaticReminder,
   toggleMedicationActive,
+  updateMedication,
   updatePatientLanguage,
   upsertPatientProfile,
   type MedicationRow,
@@ -80,6 +81,7 @@ function DoseBridgePage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [todayIdx, setTodayIdx] = useState<number>(0);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editingMed, setEditingMed] = useState<MedicationRow | null>(null);
   const [phonePopoverOpen, setPhonePopoverOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isAddingMed, setIsAddingMed] = useState(false);
@@ -253,6 +255,36 @@ function DoseBridgePage() {
       return true;
     } catch (err) {
       console.error("Add medication failed:", err);
+      toast.error(t.medValidationError);
+      return false;
+    } finally {
+      setIsAddingMed(false);
+    }
+  }
+
+  function handleEditMedication(med: MedicationRow) {
+    setEditingMed(med);
+    setAddDialogOpen(true);
+  }
+
+  async function handleUpdateMedication(
+    medicationId: string,
+    input: {
+      name: string;
+      dosage: string;
+      instructions: string;
+      daysOfWeek: number[];
+      reminderTime: string;
+    },
+  ): Promise<boolean> {
+    setIsAddingMed(true);
+    try {
+      const updated = await updateMedication(medicationId, input);
+      setMedications((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+      toast.success(t.medUpdatedToast);
+      return true;
+    } catch (err) {
+      console.error("Update medication failed:", err);
       toast.error(t.medValidationError);
       return false;
     } finally {
@@ -439,7 +471,10 @@ function DoseBridgePage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button
             type="button"
-            onClick={() => setAddDialogOpen(true)}
+            onClick={() => {
+              setEditingMed(null);
+              setAddDialogOpen(true);
+            }}
             className="h-11 gap-2 rounded-xl px-5 text-base font-bold shadow-xs"
           >
             <span>{t.addNewBtn}</span>
@@ -493,16 +528,22 @@ function DoseBridgePage() {
           timezone={timezone}
           isFiltered={isFiltered}
           onToggleActive={handleToggleActive}
+          onEdit={handleEditMedication}
           onDelete={handleDeleteMedication}
           onSendTest={handleSendTestReminder}
         />
 
         <AddMedicationDialog
           open={addDialogOpen}
-          onOpenChange={setAddDialogOpen}
+          onOpenChange={(nextOpen) => {
+            setAddDialogOpen(nextOpen);
+            if (!nextOpen) setEditingMed(null);
+          }}
           t={t}
           isSubmitting={isAddingMed}
+          editing={editingMed}
           onAdd={handleAddMedication}
+          onUpdate={handleUpdateMedication}
         />
       </main>
     </div>

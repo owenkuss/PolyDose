@@ -111,6 +111,32 @@ export async function toggleMedicationActive(
   return data;
 }
 
+export async function updateMedication(
+  medicationId: string,
+  input: {
+    name: string;
+    dosage: string;
+    instructions: string;
+    daysOfWeek: number[];
+    reminderTime: string;
+  },
+): Promise<MedicationRow> {
+  const { data, error } = await supabase
+    .from("medications")
+    .update({
+      name: input.name.trim(),
+      dosage: input.dosage.trim(),
+      instructions: input.instructions.trim(),
+      days_of_week: [...input.daysOfWeek].sort((a, b) => a - b),
+      reminder_time: input.reminderTime,
+    })
+    .eq("id", medicationId)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteMedication(medicationId: string): Promise<void> {
   const { error } = await supabase.from("medications").delete().eq("id", medicationId);
   if (error) throw error;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Camera, FileText, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Check, FileText, Pencil, Plus, Sparkles } from "lucide-react";
 import { MedicationAutocomplete } from "@/components/dosebridge/MedicationAutocomplete";
 import { TimePickerPopover } from "@/components/dosebridge/TimePickerPopover";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { MedicationRow } from "@/lib/dosebridge-api";
 import type { TranslationDict } from "@/lib/i18n";
 import type { MedicationSuggestion } from "@/lib/medication-search";
 
@@ -23,6 +24,7 @@ interface AddMedicationDialogProps {
   onOpenChange: (open: boolean) => void;
   t: TranslationDict;
   isSubmitting: boolean;
+  editing?: MedicationRow | null;
   onAdd: (med: {
     name: string;
     dosage: string;
@@ -30,6 +32,16 @@ interface AddMedicationDialogProps {
     daysOfWeek: number[];
     reminderTime: string;
   }) => Promise<boolean>;
+  onUpdate?: (
+    medicationId: string,
+    med: {
+      name: string;
+      dosage: string;
+      instructions: string;
+      daysOfWeek: number[];
+      reminderTime: string;
+    },
+  ) => Promise<boolean>;
 }
 
 export function AddMedicationDialog({
@@ -37,7 +49,9 @@ export function AddMedicationDialog({
   onOpenChange,
   t,
   isSubmitting,
+  editing = null,
   onAdd,
+  onUpdate,
 }: AddMedicationDialogProps) {
   const [mode, setMode] = useState<EntryMode>("choose");
   const [name, setName] = useState("");
@@ -56,6 +70,28 @@ export function AddMedicationDialog({
       if (photoUrl) URL.revokeObjectURL(photoUrl);
     };
   }, [photoUrl]);
+
+  // Opening the dialog for an existing medication fills the form with its current values.
+  useEffect(() => {
+    if (!open) return;
+    if (editing) {
+      setMode("text");
+      setName(editing.name);
+      setDosage(editing.dosage);
+      setSuggestedStrengths([]);
+      setInstructions(editing.instructions);
+      setDays(
+        editing.days_of_week.length > 0
+          ? [...editing.days_of_week].sort((a, b) => a - b)
+          : ALL_DAYS,
+      );
+      setReminderTime(editing.reminder_time || "08:00");
+      setError(null);
+    } else {
+      resetAll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing]);
 
   function resetAll() {
     setMode("choose");
@@ -97,13 +133,15 @@ export function AddMedicationDialog({
       return;
     }
     setError(null);
-    const ok = await onAdd({
+    const payload = {
       name: name.trim(),
       dosage: dosage.trim(),
       instructions: instructions.trim(),
       daysOfWeek: days,
       reminderTime: reminderTime || "08:00",
-    });
+    };
+    const ok =
+      editing && onUpdate ? await onUpdate(editing.id, payload) : await onAdd(payload);
     if (ok) handleOpenChange(false);
   }
 
@@ -114,7 +152,7 @@ export function AddMedicationDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl border-border bg-popover sm:max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            {mode !== "choose" && (
+            {mode !== "choose" && !editing && (
               <Button
                 type="button"
                 variant="ghost"
@@ -127,15 +165,19 @@ export function AddMedicationDialog({
               </Button>
             )}
             <DialogTitle className="font-display text-2xl font-bold text-foreground">
-              {mode === "text"
-                ? t.addByTextTitle
-                : mode === "photo"
-                  ? t.addByPhotoTitle
-                  : t.addMedTitle}
+              {editing
+                ? t.editMedTitle
+                : mode === "text"
+                  ? t.addByTextTitle
+                  : mode === "photo"
+                    ? t.addByPhotoTitle
+                    : t.addMedTitle}
             </DialogTitle>
           </div>
           <DialogDescription className="text-sm text-muted-foreground">
-            {mode === "text"
+            {editing
+              ? t.addMedSubtitle
+              : mode === "text"
               ? t.addMedSubtitle
               : mode === "photo"
                 ? t.photoCaptureHint
@@ -378,8 +420,12 @@ export function AddMedicationDialog({
             )}
 
             <Button type="submit" disabled={isSubmitting} className="h-12 w-full text-base font-bold">
-              <Plus className="h-5 w-5" aria-hidden="true" />
-              {t.addReminderBtn}
+              {editing ? (
+                <Check className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <Plus className="h-5 w-5" aria-hidden="true" />
+              )}
+              {editing ? t.saveChangesBtn : t.addReminderBtn}
             </Button>
           </form>
         )}

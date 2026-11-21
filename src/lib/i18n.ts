@@ -60,6 +60,10 @@ export interface TranslationDict {
   todayLabel: string;
   deleteBtn: string;
   medDeletedToast: string;
+  editBtn: string;
+  editMedTitle: string;
+  saveChangesBtn: string;
+  medUpdatedToast: string;
   autoSendNote: string;
   autoSentToast: string;
   lastSentLabel: string;
@@ -139,6 +143,10 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     todayLabel: "Today",
     deleteBtn: "Delete",
     medDeletedToast: "Medication removed",
+    editBtn: "Edit",
+    editMedTitle: "Edit Medication",
+    saveChangesBtn: "Save Changes",
+    medUpdatedToast: "Medication reminder updated",
     autoSendNote: "Sends automatically at scheduled time",
     autoSentToast: "Automatic medication reminder sent",
     lastSentLabel: "Last sent",
@@ -216,6 +224,10 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     todayLabel: "Hoy",
     deleteBtn: "Eliminar",
     medDeletedToast: "Medicina eliminada",
+    editBtn: "Editar",
+    editMedTitle: "Editar Medicamento",
+    saveChangesBtn: "Guardar Cambios",
+    medUpdatedToast: "Recordatorio de medicina actualizado",
     autoSendNote: "Se envía automáticamente a la hora programada",
     autoSentToast: "Recordatorio automático enviado",
     lastSentLabel: "Último envío",
@@ -293,6 +305,10 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     todayLabel: "今天",
     deleteBtn: "删除",
     medDeletedToast: "药物已删除",
+    editBtn: "编辑",
+    editMedTitle: "编辑药物",
+    saveChangesBtn: "保存更改",
+    medUpdatedToast: "用药提醒已更新",
     autoSendNote: "到设定时间自动发送提醒",
     autoSentToast: "已自动发送服药提醒",
     lastSentLabel: "上次发送",
@@ -370,6 +386,10 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     todayLabel: "Aujourd'hui",
     deleteBtn: "Supprimer",
     medDeletedToast: "Médicament supprimé",
+    editBtn: "Modifier",
+    editMedTitle: "Modifier le Médicament",
+    saveChangesBtn: "Enregistrer les Modifications",
+    medUpdatedToast: "Rappel de médicament mis à jour",
     autoSendNote: "Envoi automatique à l'heure prévue",
     autoSentToast: "Rappel automatique envoyé",
     lastSentLabel: "Dernier envoi",
@@ -447,6 +467,10 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     todayLabel: "Hôm nay",
     deleteBtn: "Xóa",
     medDeletedToast: "Đã xóa thuốc",
+    editBtn: "Sửa",
+    editMedTitle: "Sửa Thuốc",
+    saveChangesBtn: "Lưu Thay Đổi",
+    medUpdatedToast: "Nhắc uống thuốc đã cập nhật",
     autoSendNote: "Tự động gửi đúng giờ đã đặt",
     autoSentToast: "Đã tự động gửi tin nhắn nhắc thuốc",
     lastSentLabel: "Gửi gần nhất",
@@ -524,6 +548,10 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     todayLabel: "Jodi a",
     deleteBtn: "Efase",
     medDeletedToast: "Medikaman an efase",
+    editBtn: "Modifye",
+    editMedTitle: "Modifye Medicaman",
+    saveChangesBtn: "Sove Chanjman",
+    medUpdatedToast: "Rappèl medikaman an mete ajou",
     autoSendNote: "Voye otomatikman nan lè ki pwograme a",
     autoSentToast: "Rapèl medikaman otomatik la voye",
     lastSentLabel: "Dènye mesaj voye",
