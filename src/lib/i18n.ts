@@ -38,6 +38,13 @@ export interface TranslationDict {
   daysLabel: string;
   everyDay: string;
   timeLabel: string;
+  timePresetMorning: string;
+  timePresetNoon: string;
+  timePresetEvening: string;
+  timePresetBedtime: string;
+  timeHourLabel: string;
+  timeMinuteLabel: string;
+  timeDone: string;
   addReminderBtn: string;
   medAddedToast: string;
   medValidationError: string;
@@ -91,6 +98,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     daysLabel: "Reminder Days",
     everyDay: "Every Day",
     timeLabel: "Reminder Time",
+    timePresetMorning: "Morning",
+    timePresetNoon: "Noon",
+    timePresetEvening: "Evening",
+    timePresetBedtime: "Bedtime",
+    timeHourLabel: "Hour",
+    timeMinuteLabel: "Min",
+    timeDone: "Done",
     addReminderBtn: "Add Reminder",
     medAddedToast: "Medication reminder added",
     medValidationError: "Please enter a medication name, dosage, and at least one day.",
@@ -142,6 +156,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     daysLabel: "Días del Recordatorio",
     everyDay: "Todos los Días",
     timeLabel: "Hora del Recordatorio",
+    timePresetMorning: "Mañana",
+    timePresetNoon: "Mediodía",
+    timePresetEvening: "Tarde",
+    timePresetBedtime: "Antes de dormir",
+    timeHourLabel: "Hora",
+    timeMinuteLabel: "Min",
+    timeDone: "Listo",
     addReminderBtn: "Agregar Recordatorio",
     medAddedToast: "Recordatorio de medicina agregado",
     medValidationError: "Escribe el nombre, la dosis y elige al menos un día.",
@@ -193,6 +214,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     daysLabel: "提醒日期",
     everyDay: "每天",
     timeLabel: "提醒时间",
+    timePresetMorning: "早上",
+    timePresetNoon: "中午",
+    timePresetEvening: "傍晚",
+    timePresetBedtime: "睡前",
+    timeHourLabel: "时",
+    timeMinuteLabel: "分",
+    timeDone: "完成",
     addReminderBtn: "添加提醒",
     medAddedToast: "已添加服药提醒",
     medValidationError: "请填写药物名称、剂量，并至少选择一天。",
@@ -244,6 +272,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     daysLabel: "Jours de Rappel",
     everyDay: "Tous les Jours",
     timeLabel: "Heure du Rappel",
+    timePresetMorning: "Matin",
+    timePresetNoon: "Midi",
+    timePresetEvening: "Soir",
+    timePresetBedtime: "Coucher",
+    timeHourLabel: "Heure",
+    timeMinuteLabel: "Min",
+    timeDone: "Terminé",
     addReminderBtn: "Ajouter le Rappel",
     medAddedToast: "Rappel de médicament ajouté",
     medValidationError: "Indiquez le nom, la dose et au moins un jour.",
@@ -295,6 +330,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     daysLabel: "Ngày Nhắc",
     everyDay: "Mỗi Ngày",
     timeLabel: "Giờ Nhắc",
+    timePresetMorning: "Buổi sáng",
+    timePresetNoon: "Buổi trưa",
+    timePresetEvening: "Buổi tối",
+    timePresetBedtime: "Trước khi ngủ",
+    timeHourLabel: "Giờ",
+    timeMinuteLabel: "Phút",
+    timeDone: "Xong",
     addReminderBtn: "Thêm Lịch Nhắc",
     medAddedToast: "Đã thêm lịch nhắc thuốc",
     medValidationError: "Vui lòng nhập tên thuốc, liều dùng và chọn ít nhất một ngày.",
@@ -346,6 +388,13 @@ export const TRANSLATIONS: Record<LanguageCode, TranslationDict> = {
     daysLabel: "Jou Rapèl yo",
     everyDay: "Chak Jou",
     timeLabel: "Lè Rapèl la",
+    timePresetMorning: "Maten",
+    timePresetNoon: "Midi",
+    timePresetEvening: "Aswè",
+    timePresetBedtime: "Anvan dòmi",
+    timeHourLabel: "Lè",
+    timeMinuteLabel: "Minit",
+    timeDone: "Fini",
     addReminderBtn: "Ajoute Rapèl",
     medAddedToast: "Rapèl medikaman an ajoute",
     medValidationError: "Tanpri antre non medikaman an, dòz la, ak omwen yon jou.",

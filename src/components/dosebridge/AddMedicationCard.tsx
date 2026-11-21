@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { MedicationAutocomplete } from "@/components/dosebridge/MedicationAutocomplete";
+import { TimePickerPopover } from "@/components/dosebridge/TimePickerPopover";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -201,12 +202,11 @@ export function AddMedicationCard({ t, isSubmitting, onAdd }: AddMedicationCardP
               <Label htmlFor="med-time" className="text-sm font-bold">
                 {t.timeLabel}
               </Label>
-              <Input
+              <TimePickerPopover
                 id="med-time"
-                type="time"
                 value={reminderTime}
-                onChange={(e) => setReminderTime(e.target.value)}
-                className="h-11 w-full bg-background text-base font-medium sm:w-40"
+                onChange={setReminderTime}
+                t={t}
               />
             </div>
           </div>
