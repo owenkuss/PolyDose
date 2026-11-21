@@ -20,7 +20,6 @@ import {
   createMedication,
   deleteMedication,
   fetchMedications,
-  loadFirstPatient,
   loadPatientByPhone,
   toggleMedicationActive,
   updateMedication,
@@ -32,7 +31,6 @@ import {
 import {
   COMMON_TIMEZONES,
   countActiveMedicationsByDay,
-  DEFAULT_DEMO_PHONE,
   detectBrowserTimezone,
   getDueScheduledKey,
   getLocalDateParts,
@@ -78,7 +76,7 @@ export const Route = createFileRoute("/")({
 function DoseBridgePage() {
   const [language, setLanguage] = useState<LanguageCode>("en");
   const [patient, setPatient] = useState<PatientRow | null>(null);
-  const [phoneInput, setPhoneInput] = useState(DEFAULT_DEMO_PHONE);
+  const [phoneInput, setPhoneInput] = useState("");
   const [timezone, setTimezone] = useState("America/New_York");
   const [medications, setMedications] = useState<MedicationRow[]>([]);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -105,9 +103,6 @@ function DoseBridgePage() {
         let found: PatientRow | null = null;
         if (savedPhone) {
           found = await loadPatientByPhone(savedPhone);
-        }
-        if (!found) {
-          found = await loadFirstPatient();
         }
         if (cancelled) return;
 
